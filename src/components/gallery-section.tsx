@@ -9,7 +9,7 @@ import { type Photo } from "@/lib/database"; // Tetap butuh tipe Photo
 import LoadingSpinner from "@/components/ui/loading-spinner";
 
 // Hapus impor PhotoLightbox karena kita mengembalikannya
-import { SimpleLightbox } from "./ui/simple-lightbox";
+import { BasicLightbox } from "./ui/basic-lightbox";
 import { OptimizedImage } from "./ui/optimized-image"; 
 
 // --- BAGIAN INI UNTUK FRAMER-MOTION YANG DINONAKTIFKAN (SEBELUMNYA AKAN DIKEMBALIKAN JIKA ANDA INGIN ANIMASI) ---
@@ -133,9 +133,9 @@ export default function GallerySection() {
         )}
       </div>
 
-      {/* Simple Lightbox untuk Homepage */}
+      {/* Basic Lightbox untuk Homepage */}
       {isLightboxOpen && photos && (
-        <SimpleLightbox
+        <BasicLightbox
           photos={photos}
           currentIndex={currentPhotoIndex}
           isOpen={isLightboxOpen}

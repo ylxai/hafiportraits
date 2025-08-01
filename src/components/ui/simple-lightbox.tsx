@@ -3,9 +3,6 @@
 import { useState } from 'react';
 import Lightbox from 'yet-another-react-lightbox';
 
-// Import CSS
-import 'yet-another-react-lightbox/styles.css';
-
 interface Photo {
   id: string;
   url: string;

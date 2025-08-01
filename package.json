@@ -65,6 +65,7 @@
     "yet-another-react-lightbox": "^3.25.0"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.19",
     "@types/multer": "^1.4.13",
     "@types/node": "^20",
     "@types/react": "^18",
@@ -74,6 +75,7 @@
     "eslint-config-next": "14.1.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.27.0"
   }
 }

@@ -1,11 +1,6 @@
 {
-  "/api/events/[id]/route": "app/api/events/[id]/route.js",
-  "/api/events/[id]/messages/route": "app/api/events/[id]/messages/route.js",
-  "/event/[id]/page": "app/event/[id]/page.js",
-  "/api/events/[id]/photos/route": "app/api/events/[id]/photos/route.js",
-  "/api/admin/stats/route": "app/api/admin/stats/route.js",
-  "/api/admin/events/route": "app/api/admin/events/route.js",
-  "/api/admin/photos/homepage/route": "app/api/admin/photos/homepage/route.js",
+  "/not-found": "app/not-found.js",
+  "/page": "app/page.js",
   "/api/events/route": "app/api/events/route.js",
-  "/api/admin/analytics/simple-compression/route": "app/api/admin/analytics/simple-compression/route.js"
+  "/api/photos/homepage/route": "app/api/photos/homepage/route.js"
 }

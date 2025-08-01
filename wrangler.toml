@@ -1,0 +1,13 @@
+name = "hafiportrait"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = ".next"
+
+[env.production]
+name = "hafiportrait-production"
+
+[env.staging]
+name = "hafiportrait-staging"
+
+# Environment variables will be set via Cloudflare Dashboard
+[vars]
+ENVIRONMENT = "production"

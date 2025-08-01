@@ -2,16 +2,9 @@
 
 import { useState } from 'react';
 import Lightbox from 'yet-another-react-lightbox';
-import Captions from 'yet-another-react-lightbox/plugins/captions';
-import Fullscreen from 'yet-another-react-lightbox/plugins/fullscreen';
-import Slideshow from 'yet-another-react-lightbox/plugins/slideshow';
-import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
-import Zoom from 'yet-another-react-lightbox/plugins/zoom';
 
 // Import CSS
 import 'yet-another-react-lightbox/styles.css';
-import 'yet-another-react-lightbox/plugins/captions.css';
-import 'yet-another-react-lightbox/plugins/thumbnails.css';
 
 interface Photo {
   id: string;
@@ -48,49 +41,6 @@ export function SimpleLightbox({
       close={onClose}
       index={currentIndex}
       slides={slides}
-      plugins={[Captions, Fullscreen, Slideshow, Thumbnails, Zoom]}
-      
-      // Captions configuration
-      captions={{
-        showToggle: true,
-        descriptionTextAlign: 'center',
-      }}
-      
-      // Fullscreen configuration
-      fullscreen={{
-        auto: false,
-      }}
-      
-      // Slideshow configuration
-      slideshow={{
-        autoplay: false,
-        delay: 3000,
-      }}
-      
-      // Thumbnails configuration
-      thumbnails={{
-        position: 'bottom',
-        width: 120,
-        height: 80,
-        border: 2,
-        borderRadius: 4,
-        padding: 4,
-        gap: 16,
-        showToggle: true,
-      }}
-      
-      // Zoom configuration
-      zoom={{
-        maxZoomPixelRatio: 3,
-        zoomInMultiplier: 2,
-        doubleTapDelay: 300,
-        doubleClickDelay: 300,
-        doubleClickMaxStops: 2,
-        keyboardMoveDistance: 50,
-        wheelZoomDistanceFactor: 100,
-        pinchZoomDistanceFactor: 100,
-        scrollToZoom: true,
-      }}
       
       // Animation settings
       animation={{

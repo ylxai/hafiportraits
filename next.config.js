@@ -8,11 +8,13 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Cloudflare Pages configuration
+  images: {
+    unoptimized: true, // Required for Cloudflare Pages
+    domains: ['localhost', 'api.qrserver.com', 'your-supabase-url.supabase.co'],
+  },
   experimental: {
     serverComponentsExternalPackages: ['@neondatabase/serverless']
-  },
-  images: {
-    domains: ['localhost', 'api.qrserver.com'],
   },
   env: {
     DATABASE_URL: process.env.DATABASE_URL,

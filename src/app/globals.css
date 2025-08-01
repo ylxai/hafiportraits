@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --wedding-ivory: #faf9f6;
+    --wedding-gold: #d4af37;
+    --wedding-rose: #e8b4cb;
+    --wedding-sage: #87a96b;
+    --wedding-black: #000000;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      "Noto Sans",
+      sans-serif;
+  }
+}
+
+@layer components {
+  /* Mobile-friendly touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mobile-optimized delete button */
+  .mobile-delete-btn {
+    @apply absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity;
+    min-height: 32px;
+    min-width: 32px;
+    padding: 6px;
+  }
+  
+  /* Responsive grid for photo galleries */
+  .photo-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  
+  @media (min-width: 768px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+  }
+  
+  /* Mobile-friendly form inputs */
+  .mobile-input {
+    @apply text-base;
+    min-height: 44px;
+  }
+  
+  /* Mobile-friendly buttons */
+  .mobile-button {
+    @apply touch-target;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Mobile-optimized tabs */
+  .mobile-tabs {
+    @apply flex flex-wrap gap-2;
+  }
+  
+  .mobile-tab {
+    @apply flex-1 min-w-0 text-center;
+    min-height: 44px;
+  }
+  
+  /* Smooth scrolling for mobile */
+  @media (max-width: 768px) {
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* Prevent zoom on input focus (iOS) */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+    
+    /* Mobile-friendly modal */
+    .mobile-modal {
+      @apply fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center p-4;
+    }
+    
+    .mobile-modal-content {
+      @apply w-full max-w-lg bg-white rounded-t-lg sm:rounded-lg p-6 max-h-[90vh] overflow-y-auto;
+    }
+  }
+  
+  /* Touch-friendly hover states */
+  @media (hover: hover) {
+    .hover-effect:hover {
+      @apply transform scale-105 transition-transform duration-200;
+    }
+  }
+  
+  /* Safe area for devices with notches */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+} 

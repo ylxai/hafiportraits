@@ -41,6 +41,7 @@ import EventList from "@/components/admin/EventList";
 import PhotoLightbox from "@/components/photo-lightbox";
 import { QRCodeDialog } from "@/components/admin/qr-code-dialog";
 import { SimpleCompressionAnalytics } from "@/components/admin/simple-compression-analytics";
+import DSLRMonitor from "@/components/admin/dslr-monitor";
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -399,51 +400,64 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-wedding-ivory">
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-wedding-gold mb-2">
+    <div className="mobile-dashboard">
+      <div className="mobile-header safe-area-top">
+        <div className="mobile-padding">
+          <h1 className="text-2xl md:text-3xl font-bold text-wedding-gold mb-1">
             Dashboard Admin
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             Kelola event dan monitoring aktivitas platform
           </p>
         </div>
+      </div>
+      
+      <div className="mobile-content safe-area-bottom">
+        <div className="max-w-7xl mx-auto mobile-spacing">
 
         {/* Stats Cards */}
         <StatsCards stats={stats} />
 
         {/* Main Content */}
-        <Tabs defaultValue="events" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mobile-tabs">
-            <TabsTrigger value="events" className="flex items-center gap-1 sm:gap-2 mobile-tab">
-              <Calendar className="w-4 h-4" />
-              <span className="hidden xs:inline">Event</span>
-            </TabsTrigger>
-            <TabsTrigger value="photos" className="flex items-center gap-1 sm:gap-2 mobile-tab">
-              <Camera className="w-4 h-4" />
-              <span className="hidden xs:inline">Foto</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-1 sm:gap-2 mobile-tab">
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden xs:inline">Analitik</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 mobile-tab">
-              <Settings className="w-4 h-4" />
-              <span className="hidden xs:inline">Pengaturan</span>
-            </TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="events" className="mobile-spacing fade-in">
+          <div className="mobile-tabs-container">
+            <TabsList className="mobile-tabs-list">
+              <TabsTrigger value="events" className="mobile-tab">
+                <Calendar className="tab-icon" />
+                <span className="tab-label">Event</span>
+              </TabsTrigger>
+              <TabsTrigger value="photos" className="mobile-tab">
+                <Camera className="tab-icon" />
+                <span className="tab-label">Foto</span>
+              </TabsTrigger>
+              <TabsTrigger value="dslr" className="mobile-tab">
+                <Camera className="tab-icon" />
+                <span className="tab-label">DSLR</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="mobile-tab">
+                <BarChart3 className="tab-icon" />
+                <span className="tab-label">Analytics</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="mobile-tab">
+                <Settings className="tab-icon" />
+                <span className="tab-label">Settings</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Events Tab */}
-          <TabsContent value="events" className="space-y-6">
+          <TabsContent value="events" className="mobile-spacing slide-up">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Manajemen Event</CardTitle>
                 {!isEventFormOpen && ( 
-                    <Button onClick={handleAddNewClick} className="bg-wedding-gold hover:bg-wedding-gold/90 text-white">
-                        <Plus className="text-black w-4 h-4 mr-2" />
+                    <button 
+                      onClick={handleAddNewClick} 
+                      className="mobile-btn mobile-btn-primary touch-feedback bg-wedding-gold hover:bg-wedding-gold/90 text-white"
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
                         Buat Event Baru
-                    </Button>
+                    </button>
                 )}
               </CardHeader>
               <CardContent>
@@ -468,7 +482,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* Photos Tab */}
-          <TabsContent value="photos" className="space-y-6">
+          <TabsContent value="photos" className="mobile-spacing slide-up">
             <Card>
               <CardHeader>
                 <CardTitle>Manajemen Foto</CardTitle>
@@ -727,7 +741,11 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-6">
+          <TabsContent value="dslr" className="mobile-spacing slide-up">
+            <DSLRMonitor />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="mobile-spacing slide-up">
             <SimpleCompressionAnalytics />
           </TabsContent>
 
@@ -771,6 +789,7 @@ export default function AdminDashboard() {
           }}
         />
         )}
+        </div>
       </div>
     </div>
   );

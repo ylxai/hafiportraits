@@ -11,31 +11,22 @@ const FormData = require('form-data');
 const fetch = require('node-fetch');
 
 // Import notification integration
-const { getDSLRNotificationIntegration } = require('./src/lib/dslr-notification-integration');
+const { getDSLRNotificationIntegration } = require('./src/lib/dslr-notification-integration.js');
 
-// Konfigurasi
-const CONFIG = {
-  // Folder dimana Nikon D7100 menyimpan foto (sesuaikan dengan setup kamera)
-  WATCH_FOLDER: 'C:/DCIM/100NIKON', // Windows
-  // WATCH_FOLDER: '/Volumes/NIKON D7100/DCIM/100NIKON', // macOS
-  
-  // Folder backup lokal
-  BACKUP_FOLDER: './dslr-backup',
-  RAW_FOLDER: './dslr-backup/raw',
-  JPG_FOLDER: './dslr-backup/jpg',
-  
-  // API Configuration
-  API_BASE_URL: 'http://localhost:3000', // Ganti dengan production URL
-  EVENT_ID: 'your-event-id', // Set event ID yang aktif
-  
-  // File patterns
-  JPG_PATTERN: /\.(jpg|jpeg)$/i,
-  RAW_PATTERN: /\.(nef|raw)$/i,
-  
-  // Upload settings
-  UPLOADER_NAME: 'Official Photographer',
-  ALBUM_NAME: 'Official'
-};
+// Import watermark processor
+const { WatermarkProcessor } = require('./src/lib/watermark-processor.js');
+
+// Import optimized configuration
+const { config: CONFIG, validateConfig } = require('./dslr.config.js');
+
+// Validate configuration on startup
+const configErrors = validateConfig();
+if (configErrors.length > 0) {
+  console.error('❌ Configuration errors:');
+  configErrors.forEach(error => console.error(`  - ${error}`));
+  console.error('Please fix configuration errors before starting the service.');
+  process.exit(1);
+}
 
 class DSLRAutoUploader {
   constructor() {
@@ -49,6 +40,13 @@ class DSLRAutoUploader {
     
     // Initialize notification integration
     this.notificationIntegration = getDSLRNotificationIntegration();
+    
+    // Initialize config manager
+    const { DSLRConfigManager } = require('./src/lib/dslr-config-manager.js');
+    this.configManager = new DSLRConfigManager(CONFIG);
+    
+    // Initialize watermark processor
+    this.watermarkProcessor = new WatermarkProcessor(CONFIG);
     
     this.init();
   }
@@ -73,30 +71,48 @@ class DSLRAutoUploader {
     // Monitor camera connection
     this.startCameraMonitoring();
     
-    console.log(`📁 Watching folder: ${CONFIG.WATCH_FOLDER}`);
-    console.log(`📸 Event ID: ${CONFIG.EVENT_ID}`);
-    console.log(`👨‍💼 Photographer: ${CONFIG.UPLOADER_NAME}`);
+    console.log(`📁 Watching folder: ${CONFIG.CAMERA.WATCH_FOLDER}`);
+    console.log(`📸 Event ID: ${CONFIG.EVENT.ID}`);
+    console.log(`👨‍💼 Photographer: ${CONFIG.EVENT.UPLOADER_NAME}`);
+    console.log(`⚡ Performance profile: ${CONFIG.PERFORMANCE.PROFILE}`);
+    console.log(`🔔 Notifications: ${CONFIG.NOTIFICATIONS.ENABLED ? 'Enabled' : 'Disabled'}`);
+    console.log(`🏷️ Watermark: ${CONFIG.WATERMARK.ENABLED ? 'Enabled' : 'Disabled'}`);
+    
+    // Initialize watermark processor
+    if (CONFIG.WATERMARK.ENABLED) {
+      await this.watermarkProcessor.initialize();
+    }
   }
 
   async createBackupFolders() {
+    if (!CONFIG.STORAGE.ENABLE_BACKUP) {
+      console.log('📁 Backup disabled, skipping folder creation');
+      return;
+    }
+
     try {
-      await fs.mkdir(CONFIG.BACKUP_FOLDER, { recursive: true });
-      await fs.mkdir(CONFIG.RAW_FOLDER, { recursive: true });
-      await fs.mkdir(CONFIG.JPG_FOLDER, { recursive: true });
+      await fs.mkdir(CONFIG.STORAGE.BACKUP_FOLDER, { recursive: true });
+      await fs.mkdir(CONFIG.STORAGE.RAW_FOLDER, { recursive: true });
+      await fs.mkdir(CONFIG.STORAGE.JPG_FOLDER, { recursive: true });
       console.log('✅ Backup folders created');
+      
+      // Check storage space if monitoring enabled
+      if (CONFIG.MONITORING.ENABLE_METRICS) {
+        await this.checkStorageSpace();
+      }
     } catch (error) {
       console.error('❌ Error creating backup folders:', error);
     }
   }
 
   startWatcher() {
-    const watcher = chokidar.watch(CONFIG.WATCH_FOLDER, {
+    const watcher = chokidar.watch(CONFIG.CAMERA.WATCH_FOLDER, {
       ignored: /^\./, // ignore dotfiles
       persistent: true,
       ignoreInitial: true, // ignore existing files
       awaitWriteFinish: {
-        stabilityThreshold: 2000, // wait 2s after file stops changing
-        pollInterval: 100
+        stabilityThreshold: CONFIG.PERFORMANCE.stabilityThreshold,
+        pollInterval: CONFIG.PERFORMANCE.pollInterval
       }
     });
 
@@ -121,16 +137,17 @@ class DSLRAutoUploader {
       // Backup file ke local storage
       await this.backupFile(filePath, fileName);
       
-      // Jika JPG, upload ke Supabase
-      if (CONFIG.JPG_PATTERN.test(fileExt)) {
+      // Check if file should be processed
+      const shouldProcess = this.shouldProcessFile(fileName, fileExt);
+      if (shouldProcess) {
         // Trigger upload start notification
-        this.notificationIntegration.triggerEvent('upload_start', {
+        await this.notificationIntegration.triggerEvent('upload_start', {
           fileName,
           fileSize: (await fs.stat(filePath)).size,
           filePath,
-          albumName: CONFIG.ALBUM_NAME,
-          eventName: CONFIG.EVENT_ID,
-          uploaderName: CONFIG.UPLOADER_NAME
+          albumName: CONFIG.EVENT.ALBUM_NAME,
+          eventName: CONFIG.EVENT.ID,
+          uploaderName: CONFIG.EVENT.UPLOADER_NAME
         });
 
         await this.uploadToSupabase(filePath, fileName);
@@ -143,31 +160,45 @@ class DSLRAutoUploader {
       console.error(`❌ Error processing ${fileName}:`, error);
       
       // Trigger upload failed notification
-      this.notificationIntegration.triggerEvent('upload_failed', {
+      await this.notificationIntegration.triggerEvent('upload_failed', {
         fileName,
         filePath,
-        albumName: CONFIG.ALBUM_NAME,
-        eventName: CONFIG.EVENT_ID,
-        uploaderName: CONFIG.UPLOADER_NAME,
+        albumName: CONFIG.EVENT.ALBUM_NAME,
+        eventName: CONFIG.EVENT.ID,
+        uploaderName: CONFIG.EVENT.UPLOADER_NAME,
         error: error.message
       });
+      
+      // Update failed count
+      this.uploadStats.totalFailed++;
     }
   }
 
   async backupFile(sourcePath, fileName) {
+    if (!CONFIG.STORAGE.ENABLE_BACKUP) {
+      return;
+    }
+
     try {
       const fileExt = path.extname(fileName).toLowerCase();
       let targetFolder;
       
-      if (CONFIG.JPG_PATTERN.test(fileExt)) {
-        targetFolder = CONFIG.JPG_FOLDER;
-      } else if (CONFIG.RAW_PATTERN.test(fileExt)) {
-        targetFolder = CONFIG.RAW_FOLDER;
+      if (CONFIG.FILES.JPG_PATTERN.test(fileExt)) {
+        targetFolder = CONFIG.STORAGE.JPG_FOLDER;
+      } else if (CONFIG.FILES.RAW_PATTERN.test(fileExt)) {
+        targetFolder = CONFIG.STORAGE.RAW_FOLDER;
       } else {
-        targetFolder = CONFIG.BACKUP_FOLDER;
+        targetFolder = CONFIG.STORAGE.BACKUP_FOLDER;
       }
       
       const targetPath = path.join(targetFolder, fileName);
+      
+      // Check file size limit
+      const stats = await fs.stat(sourcePath);
+      if (stats.size > CONFIG.FILES.MAX_FILE_SIZE_MB * 1024 * 1024) {
+        console.warn(`⚠️ File ${fileName} exceeds size limit, skipping backup`);
+        return;
+      }
       
       // Copy file
       const data = await fs.readFile(sourcePath);
@@ -182,17 +213,36 @@ class DSLRAutoUploader {
 
   async uploadToSupabase(filePath, fileName) {
     try {
-      console.log(`🚀 Uploading ${fileName} to Supabase...`);
+      console.log(`🚀 Processing ${fileName} for upload...`);
       
-      // Read file
-      const fileBuffer = await fs.readFile(filePath);
-      const fileBlob = new Blob([fileBuffer], { type: 'image/jpeg' });
+      let processedFilePath = filePath;
+      let watermarkResult = null;
+      
+      // Apply watermark if enabled
+      if (CONFIG.WATERMARK.ENABLED) {
+        const watermarkedPath = path.join(CONFIG.STORAGE.JPG_FOLDER, `watermarked_${fileName}`);
+        
+        console.log(`🏷️ Applying watermark to ${fileName}...`);
+        watermarkResult = await this.watermarkProcessor.processImage(filePath, watermarkedPath);
+        
+        if (watermarkResult.success && watermarkResult.watermarked) {
+          processedFilePath = watermarkedPath;
+          console.log(`✅ Watermark applied successfully`);
+        } else {
+          console.log(`⚠️ Watermark processing: ${watermarkResult.message}`);
+        }
+      }
+      
+      console.log(`📤 Uploading ${fileName} to Supabase...`);
+      
+      // Read processed file
+      const fileBuffer = await fs.readFile(processedFilePath);
       
       // Create FormData
       const formData = new FormData();
-      formData.append('file', fileBlob, fileName);
-      formData.append('uploaderName', CONFIG.UPLOADER_NAME);
-      formData.append('albumName', CONFIG.ALBUM_NAME);
+      formData.append('file', fileBuffer, fileName);
+      formData.append('uploaderName', CONFIG.EVENT.UPLOADER_NAME);
+      formData.append('albumName', CONFIG.EVENT.ALBUM_NAME);
       
       // Upload via API
       const response = await fetch(
@@ -211,14 +261,17 @@ class DSLRAutoUploader {
         // Update stats
         this.uploadStats.totalUploaded++;
         
+        // Get file stats
+        const fileStats = await fs.stat(filePath);
+        
         // Trigger upload success notification
-        this.notificationIntegration.triggerEvent('upload_success', {
+        await this.notificationIntegration.triggerEvent('upload_success', {
           fileName,
-          fileSize: (await fs.stat(filePath)).size,
+          fileSize: fileStats.size,
           filePath,
-          albumName: CONFIG.ALBUM_NAME,
-          eventName: CONFIG.EVENT_ID,
-          uploaderName: CONFIG.UPLOADER_NAME,
+          albumName: CONFIG.EVENT.ALBUM_NAME,
+          eventName: CONFIG.EVENT.ID,
+          uploaderName: CONFIG.EVENT.UPLOADER_NAME,
           photoId: result.id,
           total: this.uploadStats.totalUploaded
         });
@@ -226,8 +279,8 @@ class DSLRAutoUploader {
         // Check for milestones
         this.checkEventMilestone();
         
-        // Optional: Send notification
-        this.sendNotification(fileName, result);
+        // Update DSLR status
+        await this.updateDSLRStatus();
         
       } else {
         const error = await response.text();
@@ -246,21 +299,54 @@ class DSLRAutoUploader {
     }
   }
 
-  sendNotification(fileName, uploadResult) {
-    // Optional: Send notification ke admin/client
-    console.log(`📱 New official photo uploaded: ${fileName}`);
-    
-    // Bisa integrate dengan:
-    // - WhatsApp API
-    // - Email notification
-    // - Push notification
-    // - Slack/Discord webhook
+  // Update DSLR status
+  async updateDSLRStatus() {
+    try {
+      await this.notificationIntegration.updateDSLRStatus({
+        totalUploaded: this.uploadStats.totalUploaded,
+        failedUploads: this.uploadStats.totalFailed,
+        lastUpload: new Date().toISOString(),
+        queueSize: this.processedFiles.size,
+        isProcessing: this.isProcessing
+      });
+    } catch (error) {
+      console.error('❌ Failed to update DSLR status:', error);
+    }
   }
 
   // Method untuk set event ID secara dinamis
   setEventId(eventId) {
-    CONFIG.EVENT_ID = eventId;
+    this.configManager.set('EVENT.ID', eventId);
     console.log(`📝 Event ID updated: ${eventId}`);
+  }
+
+  // Check if file should be processed
+  shouldProcessFile(fileName, fileExt) {
+    // Check file extension
+    if (CONFIG.FILES.JPG_PATTERN.test(fileExt)) {
+      return true;
+    }
+    
+    if (CONFIG.FILES.RAW_PATTERN.test(fileExt) && CONFIG.FILES.PROCESS_RAW_FILES) {
+      return true;
+    }
+    
+    if (CONFIG.FILES.VIDEO_PATTERN.test(fileExt) && CONFIG.FILES.PROCESS_VIDEO_FILES) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  // Check storage space
+  async checkStorageSpace() {
+    try {
+      const stats = await fs.stat(CONFIG.STORAGE.BACKUP_FOLDER);
+      // This is a simplified check - in production you'd use a proper disk space library
+      console.log(`💾 Storage check completed for: ${CONFIG.STORAGE.BACKUP_FOLDER}`);
+    } catch (error) {
+      console.warn('⚠️ Could not check storage space:', error.message);
+    }
   }
 
   // Method untuk pause/resume

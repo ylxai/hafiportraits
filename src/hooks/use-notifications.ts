@@ -57,54 +57,108 @@ export function useNotifications(): NotificationHook {
 
   // Setup WebSocket connection
   useEffect(() => {
-    const wsClient = getWebSocketClient();
+    let wsClient: any = null;
     
-    // Connection status listeners
-    wsClient.on('connected', () => {
-      setState(prev => ({ ...prev, isConnected: true, error: null }));
-      console.log('✅ WebSocket connected');
-    });
+    try {
+      wsClient = getWebSocketClient();
+      
+      // Connection status listeners
+      const handleConnected = () => {
+        setState(prev => ({ ...prev, isConnected: true, error: null }));
+        console.log('✅ WebSocket connected');
+      };
 
-    wsClient.on('disconnected', () => {
-      setState(prev => ({ ...prev, isConnected: false }));
-      console.log('🔌 WebSocket disconnected');
-    });
+      const handleDisconnected = () => {
+        setState(prev => ({ ...prev, isConnected: false }));
+        console.log('🔌 WebSocket disconnected');
+      };
 
-    wsClient.on('error', (data: any) => {
-      setState(prev => ({ ...prev, error: 'WebSocket connection error' }));
-      console.error('❌ WebSocket error:', data);
-    });
+      const handleError = (data: any) => {
+        setState(prev => ({ ...prev, error: 'WebSocket connection error' }));
+        console.error('❌ WebSocket error:', data);
+      };
 
-    wsClient.on('max_reconnect_attempts', () => {
-      setState(prev => ({ ...prev, error: 'Failed to connect to notification service' }));
-    });
+      const handleMaxReconnect = () => {
+        setState(prev => ({ ...prev, error: 'Failed to connect to notification service' }));
+      };
 
-    // Notification listeners
-    wsClient.on('notification', (payload: any) => {
-      // Update unread count
-      setState(prev => ({ ...prev, unreadCount: prev.unreadCount + 1 }));
-    });
+      // Notification listeners
+      const handleNotification = (payload: any) => {
+        setState(prev => ({ ...prev, unreadCount: prev.unreadCount + 1 }));
+        
+        // Show toast notification
+        if (payload.showToast && payload.title) {
+          addToast({
+            type: payload.type === 'upload_success' ? 'success' : 
+                  payload.type === 'upload_failed' ? 'error' : 'info',
+            title: payload.title,
+            message: payload.message,
+            duration: payload.persistent ? 0 : 5000
+          });
+        }
+      };
 
-    wsClient.on('upload_progress', (payload: any) => {
-      console.log('📤 Upload progress:', payload);
-    });
+      const handleUploadProgress = (payload: any) => {
+        console.log('📤 Upload progress:', payload);
+        // Could update a progress indicator here
+      };
 
-    wsClient.on('camera_status', (payload: any) => {
-      console.log('📷 Camera status:', payload);
-    });
+      const handleCameraStatus = (payload: any) => {
+        console.log('📷 Camera status:', payload);
+        
+        // Show important camera notifications
+        if (payload.type === 'camera_disconnected') {
+          addToast({
+            type: 'warning',
+            title: payload.title,
+            message: payload.message,
+            duration: 0 // Persistent
+          });
+        }
+      };
 
-    wsClient.on('system_status', (payload: any) => {
-      console.log('⚙️ System status:', payload);
-    });
+      const handleSystemStatus = (payload: any) => {
+        console.log('⚙️ System status:', payload);
+        
+        // Show system warnings
+        if (payload.type === 'storage_warning') {
+          addToast({
+            type: 'warning',
+            title: payload.title,
+            message: payload.message,
+            duration: 0 // Persistent
+          });
+        }
+      };
 
-    return () => {
-      // Cleanup listeners
-      wsClient.off('connected', () => {});
-      wsClient.off('disconnected', () => {});
-      wsClient.off('error', () => {});
-      wsClient.off('notification', () => {});
-    };
-  }, []);
+      // Attach listeners
+      wsClient.on('connected', handleConnected);
+      wsClient.on('disconnected', handleDisconnected);
+      wsClient.on('error', handleError);
+      wsClient.on('max_reconnect_attempts', handleMaxReconnect);
+      wsClient.on('notification', handleNotification);
+      wsClient.on('upload_progress', handleUploadProgress);
+      wsClient.on('camera_status', handleCameraStatus);
+      wsClient.on('system_status', handleSystemStatus);
+
+      return () => {
+        // Cleanup listeners
+        if (wsClient) {
+          wsClient.off('connected', handleConnected);
+          wsClient.off('disconnected', handleDisconnected);
+          wsClient.off('error', handleError);
+          wsClient.off('max_reconnect_attempts', handleMaxReconnect);
+          wsClient.off('notification', handleNotification);
+          wsClient.off('upload_progress', handleUploadProgress);
+          wsClient.off('camera_status', handleCameraStatus);
+          wsClient.off('system_status', handleSystemStatus);
+        }
+      };
+    } catch (error) {
+      console.error('❌ Error setting up WebSocket:', error);
+      setState(prev => ({ ...prev, error: 'Failed to initialize WebSocket connection' }));
+    }
+  }, [addToast]);
 
   // Setup FCM foreground message listener
   useEffect(() => {

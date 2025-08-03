@@ -28,7 +28,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Crown
+  Crown,
+  Bell
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
@@ -42,6 +43,10 @@ import PhotoLightbox from "@/components/photo-lightbox";
 import { QRCodeDialog } from "@/components/admin/qr-code-dialog";
 import { SimpleCompressionAnalytics } from "@/components/admin/simple-compression-analytics";
 import DSLRMonitor from "@/components/admin/dslr-monitor";
+import NotificationManager from "@/components/admin/notification-manager";
+import NotificationBell from "@/components/ui/notification-bell";
+import { ToastProvider } from "@/components/ui/toast-notification";
+import ToastDemo from "@/components/admin/toast-demo";
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -400,15 +405,23 @@ export default function AdminDashboard() {
   }
 
   return (
+    <ToastProvider>
     <div className="mobile-dashboard">
       <div className="mobile-header safe-area-top">
         <div className="mobile-padding">
-          <h1 className="text-2xl md:text-3xl font-bold text-wedding-gold mb-1">
-            Dashboard Admin
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Kelola event dan monitoring aktivitas platform
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-wedding-gold mb-1">
+                Dashboard Admin
+              </h1>
+              <p className="text-sm md:text-base text-muted-foreground">
+                Kelola event dan monitoring aktivitas platform
+              </p>
+            </div>
+            
+            {/* Notification Bell */}
+            <NotificationBell className="flex-shrink-0" />
+          </div>
         </div>
       </div>
       
@@ -437,6 +450,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="analytics" className="mobile-tab">
                 <BarChart3 className="tab-icon" />
                 <span className="tab-label">Analytics</span>
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="mobile-tab">
+                <Bell className="tab-icon" />
+                <span className="tab-label">Notifikasi</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="mobile-tab">
                 <Settings className="tab-icon" />
@@ -745,6 +762,13 @@ export default function AdminDashboard() {
             <DSLRMonitor />
           </TabsContent>
 
+          <TabsContent value="notifications" className="mobile-spacing slide-up">
+            <div className="space-y-6">
+              <NotificationManager />
+              <ToastDemo />
+            </div>
+          </TabsContent>
+
           <TabsContent value="analytics" className="mobile-spacing slide-up">
             <SimpleCompressionAnalytics />
           </TabsContent>
@@ -792,5 +816,6 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
+    </ToastProvider>
   );
 } 

@@ -370,6 +370,69 @@
     display: none;
   }
   
+  /* Toast Notification Animations */
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes shrink {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
+  
+  /* Notification Bell Animations */
+  @keyframes bellRing {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+    20%, 40%, 60%, 80% { transform: rotate(10deg); }
+  }
+  
+  .bell-ring {
+    animation: bellRing 0.5s ease-in-out;
+  }
+  
+  /* Pulse animation for notification badge */
+  @keyframes pulse-notification {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+  
+  .pulse-notification {
+    animation: pulse-notification 2s infinite;
+  }
+  
+  /* Line clamp utility */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
   /* Enhanced Touch Feedback */
   .touch-feedback {
     @apply active:scale-95 transition-transform duration-100;

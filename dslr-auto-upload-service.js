@@ -10,6 +10,9 @@ const path = require('path');
 const FormData = require('form-data');
 const fetch = require('node-fetch');
 
+// Import notification integration
+const { getDSLRNotificationIntegration } = require('./src/lib/dslr-notification-integration');
+
 // Konfigurasi
 const CONFIG = {
   // Folder dimana Nikon D7100 menyimpan foto (sesuaikan dengan setup kamera)
@@ -38,6 +41,15 @@ class DSLRAutoUploader {
   constructor() {
     this.isProcessing = false;
     this.processedFiles = new Set();
+    this.uploadStats = {
+      totalUploaded: 0,
+      totalFailed: 0,
+      sessionStartTime: new Date().toISOString()
+    };
+    
+    // Initialize notification integration
+    this.notificationIntegration = getDSLRNotificationIntegration();
+    
     this.init();
   }
 
@@ -49,6 +61,17 @@ class DSLRAutoUploader {
     
     // Start file watcher
     this.startWatcher();
+    
+    // Trigger camera connected notification
+    this.notificationIntegration.triggerEvent('camera_connected', {
+      cameraModel: 'Nikon D7100',
+      status: 'connected',
+      message: 'DSLR Auto Upload Service started successfully',
+      lastSeen: new Date().toISOString()
+    });
+    
+    // Monitor camera connection
+    this.startCameraMonitoring();
     
     console.log(`📁 Watching folder: ${CONFIG.WATCH_FOLDER}`);
     console.log(`📸 Event ID: ${CONFIG.EVENT_ID}`);
@@ -100,6 +123,16 @@ class DSLRAutoUploader {
       
       // Jika JPG, upload ke Supabase
       if (CONFIG.JPG_PATTERN.test(fileExt)) {
+        // Trigger upload start notification
+        this.notificationIntegration.triggerEvent('upload_start', {
+          fileName,
+          fileSize: (await fs.stat(filePath)).size,
+          filePath,
+          albumName: CONFIG.ALBUM_NAME,
+          eventName: CONFIG.EVENT_ID,
+          uploaderName: CONFIG.UPLOADER_NAME
+        });
+
         await this.uploadToSupabase(filePath, fileName);
       }
       
@@ -108,6 +141,16 @@ class DSLRAutoUploader {
       
     } catch (error) {
       console.error(`❌ Error processing ${fileName}:`, error);
+      
+      // Trigger upload failed notification
+      this.notificationIntegration.triggerEvent('upload_failed', {
+        fileName,
+        filePath,
+        albumName: CONFIG.ALBUM_NAME,
+        eventName: CONFIG.EVENT_ID,
+        uploaderName: CONFIG.UPLOADER_NAME,
+        error: error.message
+      });
     }
   }
 
@@ -165,11 +208,30 @@ class DSLRAutoUploader {
         console.log(`✅ Upload success: ${fileName}`);
         console.log(`📷 Photo ID: ${result.id}`);
         
+        // Update stats
+        this.uploadStats.totalUploaded++;
+        
+        // Trigger upload success notification
+        this.notificationIntegration.triggerEvent('upload_success', {
+          fileName,
+          fileSize: (await fs.stat(filePath)).size,
+          filePath,
+          albumName: CONFIG.ALBUM_NAME,
+          eventName: CONFIG.EVENT_ID,
+          uploaderName: CONFIG.UPLOADER_NAME,
+          photoId: result.id,
+          total: this.uploadStats.totalUploaded
+        });
+
+        // Check for milestones
+        this.checkEventMilestone();
+        
         // Optional: Send notification
         this.sendNotification(fileName, result);
         
       } else {
         const error = await response.text();
+        this.uploadStats.totalFailed++;
         throw new Error(`Upload failed: ${response.status} - ${error}`);
       }
       
@@ -212,13 +274,53 @@ class DSLRAutoUploader {
     console.log('▶️ Auto upload resumed');
   }
 
+  // Check for event milestones
+  checkEventMilestone() {
+    const milestones = [10, 25, 50, 100, 250, 500, 1000];
+    const current = this.uploadStats.totalUploaded;
+    
+    if (milestones.includes(current)) {
+      this.notificationIntegration.triggerEvent('event_milestone', {
+        eventName: CONFIG.EVENT_ID,
+        eventId: CONFIG.EVENT_ID,
+        milestone: current,
+        totalPhotos: current,
+        albumName: CONFIG.ALBUM_NAME
+      });
+    }
+  }
+
+  // Monitor camera connection
+  startCameraMonitoring() {
+    setInterval(() => {
+      this.checkCameraConnection();
+    }, 30000); // Check every 30 seconds
+  }
+
+  async checkCameraConnection() {
+    try {
+      // Check if watch folder is accessible
+      await fs.access(CONFIG.WATCH_FOLDER);
+      // Camera is connected
+    } catch (error) {
+      // Camera disconnected
+      this.notificationIntegration.triggerEvent('camera_disconnected', {
+        cameraModel: 'Nikon D7100',
+        status: 'disconnected',
+        message: 'Camera folder not accessible',
+        lastSeen: new Date().toISOString()
+      });
+    }
+  }
+
   // Get statistics
   getStats() {
     return {
       processedFiles: this.processedFiles.size,
       isProcessing: this.isProcessing,
       watchFolder: CONFIG.WATCH_FOLDER,
-      eventId: CONFIG.EVENT_ID
+      eventId: CONFIG.EVENT_ID,
+      uploadStats: this.uploadStats
     };
   }
 }

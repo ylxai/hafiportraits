@@ -1,11 +1,7 @@
 {
   "/not-found": "app/not-found.js",
-  "/api/events/route": "app/api/events/route.js",
-  "/page": "app/page.js",
-  "/api/photos/homepage/route": "app/api/photos/homepage/route.js",
-  "/admin/page": "app/admin/page.js",
-  "/api/admin/events/route": "app/api/admin/events/route.js",
   "/api/admin/stats/route": "app/api/admin/stats/route.js",
+  "/api/admin/events/route": "app/api/admin/events/route.js",
   "/api/admin/photos/homepage/route": "app/api/admin/photos/homepage/route.js",
-  "/api/admin/analytics/simple-compression/route": "app/api/admin/analytics/simple-compression/route.js"
+  "/admin/page": "app/admin/page.js"
 }

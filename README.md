@@ -1,4 +1,4 @@
-# Hafi Portrait - Next.js Application
+# Hafiportrait - Next.js Application
 
 Platform berbagi foto untuk event dan acara spesial yang telah dimigrasikan dari Vite/Express ke Next.js.
 
@@ -26,45 +26,6 @@ Platform berbagi foto untuk event dan acara spesial yang telah dimigrasikan dari
 - Node.js 18+ 
 - PostgreSQL database
 - npm atau yarn
-
-## 🚀 Getting Started
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd hafiportrait-nextjs
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Edit `.env.local` dengan konfigurasi database Anda:
-   ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/hafiportrait"
-   NEXT_PUBLIC_APP_URL="http://localhost:3000"
-   ```
-
-4. **Set up database**
-   ```bash
-   npm run db:push
-   ```
-
-5. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser**
-   ```
-   http://localhost:3000
-   ```
 
 ## 📁 Project Structure
 

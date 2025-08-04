@@ -110,7 +110,7 @@ export default function PricingSection() {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
           {plans.map((plan, index) => (
             <Card key={index} className={`relative ${plan.popular ? 'border-wedding-gold border-2' : ''}`}>
               {plan.popular && (
@@ -137,8 +137,9 @@ export default function PricingSection() {
                   ))}
                 </ul>
                 <Button 
-                  className={`w-full ${plan.popular ? 'bg-wedding-gold hover:bg-wedding-gold/90' : ''}`}
+                  className={`w-full mobile-button ${plan.popular ? 'bg-wedding-gold hover:bg-wedding-gold/90' : ''}`}
                   variant={plan.popular ? 'default' : 'outline'}
+                  size="lg"
                 >
                   Pilih Paket
                 </Button>

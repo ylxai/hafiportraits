@@ -21,7 +21,9 @@ import {
   TrendingUp,
   Users,
   Activity,
-  Monitor
+  Monitor,
+  Image,
+  FolderOpen
 } from "lucide-react";
 
 // Import existing components
@@ -46,20 +48,20 @@ export default function AdminDashboardGrouped() {
         <div className="min-h-screen bg-gray-50">
           <div className="max-w-7xl mx-auto p-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
                 <p className="text-gray-600">Kelola event dan foto Anda dengan mudah</p>
               </div>
-              <div className="flex items-center gap-4">
-                <ColorPaletteSwitcher variant="button" size="sm" />
+              <div className="flex flex-wrap items-center gap-3">
                 <NotificationBell />
                 <Button 
                   onClick={() => setIsEventFormOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Buat Event Baru
+                  <span className="hidden sm:inline">Buat Event Baru</span>
+                  <span className="sm:hidden">Event Baru</span>
                 </Button>
               </div>
             </div>
@@ -241,24 +243,151 @@ export default function AdminDashboardGrouped() {
                 </div>
 
                 {/* Content based on sub-tab */}
-                {activeSubTab === 'events' && <EventList />}
-                {activeSubTab === 'photos' && (
+                {activeSubTab === 'events' && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>📸 Photo Management</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Manage and organize your photo collections
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-wedding-gold" />
+                        Event Management
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Kelola event dan acara photography Anda
                       </p>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-center py-12">
-                        <Camera className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Photo Management</h3>
-                        <p className="text-gray-600 mb-4">Advanced photo management features coming soon</p>
-                        <Button variant="outline">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Photos
-                        </Button>
+                      <div className="space-y-6">
+                        {/* Quick Actions */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button 
+                            onClick={() => setIsEventFormOpen(true)}
+                            className="bg-wedding-gold hover:bg-wedding-gold/90 text-black"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Buat Event Baru
+                          </Button>
+                          <Button variant="outline">
+                            <Upload className="w-4 h-4 mr-2" />
+                            Import Events
+                          </Button>
+                        </div>
+
+                        {/* Event List Placeholder */}
+                        <div className="border rounded-lg p-8 text-center bg-gray-50">
+                          <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">Event Management</h3>
+                          <p className="text-gray-600 mb-4">
+                            Kelola semua event photography Anda dalam satu tempat
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                            <div className="text-center p-4 bg-white rounded-lg border">
+                              <div className="text-2xl font-bold text-blue-600">0</div>
+                              <div className="text-sm text-gray-600">Active Events</div>
+                            </div>
+                            <div className="text-center p-4 bg-white rounded-lg border">
+                              <div className="text-2xl font-bold text-green-600">0</div>
+                              <div className="text-sm text-gray-600">Total Photos</div>
+                            </div>
+                            <div className="text-center p-4 bg-white rounded-lg border">
+                              <div className="text-2xl font-bold text-purple-600">0</div>
+                              <div className="text-sm text-gray-600">Total Guests</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {activeSubTab === 'photos' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Camera className="w-5 h-5 text-wedding-gold" />
+                        Photo Management
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Kelola foto untuk homepage dan event
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {/* Photo Management Options */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Homepage Photos */}
+                          <div className="border rounded-lg p-6 bg-blue-50">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                                <Camera className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">Homepage Gallery</h3>
+                                <p className="text-sm text-gray-600">Foto untuk ditampilkan di homepage</p>
+                              </div>
+                            </div>
+                            <div className="space-y-3">
+                              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload ke Homepage
+                              </Button>
+                              <Button variant="outline" className="w-full">
+                                <Image className="w-4 h-4 mr-2" />
+                                Kelola Foto Homepage
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Event Photos */}
+                          <div className="border rounded-lg p-6 bg-green-50">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                                <FolderOpen className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">Event Photos</h3>
+                                <p className="text-sm text-gray-600">Foto untuk event spesifik</p>
+                              </div>
+                            </div>
+                            <div className="space-y-3">
+                              <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload ke Event
+                              </Button>
+                              <Button variant="outline" className="w-full">
+                                <Image className="w-4 h-4 mr-2" />
+                                Kelola Foto Event
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Photo Statistics */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div className="text-center p-4 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-blue-600">0</div>
+                            <div className="text-sm text-gray-600">Homepage Photos</div>
+                          </div>
+                          <div className="text-center p-4 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-green-600">0</div>
+                            <div className="text-sm text-gray-600">Event Photos</div>
+                          </div>
+                          <div className="text-center p-4 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-purple-600">0</div>
+                            <div className="text-sm text-gray-600">Total Storage</div>
+                          </div>
+                          <div className="text-center p-4 bg-white rounded-lg border">
+                            <div className="text-2xl font-bold text-orange-600">0</div>
+                            <div className="text-sm text-gray-600">DSLR Photos</div>
+                          </div>
+                        </div>
+
+                        {/* Recent Photos */}
+                        <div className="border rounded-lg p-6 bg-gray-50">
+                          <h4 className="font-medium text-gray-900 mb-4">Recent Photos</h4>
+                          <div className="text-center py-8">
+                            <Image className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                            <p className="text-gray-600">No recent photos</p>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -408,14 +537,11 @@ export default function AdminDashboardGrouped() {
                     <CardContent className="space-y-6">
                       {/* Color Palette Section */}
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold">Color Theme</h3>
-                            <p className="text-sm text-muted-foreground">
-                              Pilih tema warna yang sesuai dengan brand dan event Anda
-                            </p>
-                          </div>
-                          <ColorPaletteSwitcher variant="button" size="sm" />
+                        <div>
+                          <h3 className="text-lg font-semibold">Color Theme</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Pilih tema warna yang sesuai dengan brand dan event Anda
+                          </p>
                         </div>
                         
                         {/* Inline Color Palette Selector */}
@@ -455,10 +581,76 @@ export default function AdminDashboardGrouped() {
                 {activeSubTab === 'settings' && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>⚙️ General Settings</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <Settings className="w-5 h-5 text-wedding-gold" />
+                        General Settings
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Konfigurasi umum aplikasi dan sistem
+                      </p>
                     </CardHeader>
-                    <CardContent>
-                      <p>General application settings will be displayed here</p>
+                    <CardContent className="space-y-6">
+                      {/* Website Settings */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Website Configuration</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Website Title</label>
+                            <input 
+                              type="text" 
+                              defaultValue="HafiPortrait"
+                              className="w-full p-3 border rounded-lg"
+                            />
+                          </div>
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Website Description</label>
+                            <input 
+                              type="text" 
+                              defaultValue="Professional Photography Services"
+                              className="w-full p-3 border rounded-lg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Upload Settings */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Upload Configuration</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">Auto Upload</p>
+                              <p className="text-sm text-muted-foreground">
+                                Otomatis upload foto dari DSLR
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Enabled
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">Image Compression</p>
+                              <p className="text-sm text-muted-foreground">
+                                Kompres foto untuk menghemat storage
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Configure
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 pt-4 border-t">
+                        <Button className="bg-wedding-gold hover:bg-wedding-gold/90 text-black">
+                          💾 Save Settings
+                        </Button>
+                        <Button variant="outline">
+                          🔄 Reset to Default
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -466,10 +658,111 @@ export default function AdminDashboardGrouped() {
                 {activeSubTab === 'preferences' && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>🔧 User Preferences</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="w-5 h-5 text-wedding-gold" />
+                        User Preferences
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Personalisasi pengalaman pengguna Anda
+                      </p>
                     </CardHeader>
-                    <CardContent>
-                      <p>User preferences and customization options will be shown here</p>
+                    <CardContent className="space-y-6">
+                      {/* Display Preferences */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Display Preferences</h3>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">Dark Mode</p>
+                              <p className="text-sm text-muted-foreground">
+                                Gunakan tema gelap untuk admin dashboard
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Auto
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">Language</p>
+                              <p className="text-sm text-muted-foreground">
+                                Bahasa interface admin dashboard
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Bahasa Indonesia
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Notification Preferences */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Notification Preferences</h3>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">Email Notifications</p>
+                              <p className="text-sm text-muted-foreground">
+                                Terima notifikasi via email
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Enabled
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">Push Notifications</p>
+                              <p className="text-sm text-muted-foreground">
+                                Notifikasi real-time di browser
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Enabled
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Privacy Settings */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Privacy & Security</h3>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">Two-Factor Authentication</p>
+                              <p className="text-sm text-muted-foreground">
+                                Keamanan tambahan untuk login
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Setup
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">Session Timeout</p>
+                              <p className="text-sm text-muted-foreground">
+                                Auto logout setelah tidak aktif
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              30 minutes
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 pt-4 border-t">
+                        <Button className="bg-wedding-gold hover:bg-wedding-gold/90 text-black">
+                          💾 Save Preferences
+                        </Button>
+                        <Button variant="outline">
+                          🔄 Reset to Default
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 )}

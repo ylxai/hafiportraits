@@ -95,7 +95,7 @@ export default function ContactSection() {
           </motion.p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Contact Methods */}
           <motion.div
             variants={cardContainerVariants}
@@ -127,7 +127,7 @@ export default function ContactSection() {
                       </div>
                       <Button
                         size="sm"
-                        className="bg-white text-gray-700 hover:bg-gray-50 shadow-md flex-shrink-0"
+                        className="bg-white text-gray-700 hover:bg-gray-50 shadow-md flex-shrink-0 mobile-button"
                         onClick={() => window.open(contact.href, '_blank')}
                       >
                         Connect
@@ -148,10 +148,10 @@ export default function ContactSection() {
                 </p>
                 <Button
                   size="lg"
-                  className="bg-white text-wedding-gold hover:bg-gray-50 font-semibold" 
+                  className="bg-white text-wedding-gold hover:bg-gray-50 font-semibold mobile-button w-full sm:w-auto" 
                   onClick={() => window.open('https://wa.me/6289570503193?text=Halo%20Hafiportrait,%20saya%20tertarik%20dengan%20layanan%20wedding%20photography%20Anda', '_blank')}
                 >
-                  <Phone className="mr-2 h-5 w-5" />
+                  <Phone className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   Chat WhatsApp
                 </Button>
               </div>

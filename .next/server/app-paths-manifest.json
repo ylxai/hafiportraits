@@ -1,1 +1,8 @@
-{}
+{
+  "/not-found": "app/not-found.js",
+  "/page": "app/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/events/route": "app/api/events/route.js",
+  "/api/photos/homepage/route": "app/api/photos/homepage/route.js",
+  "/color-demo/page": "app/color-demo/page.js"
+}

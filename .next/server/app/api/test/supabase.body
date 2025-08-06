@@ -1,1 +1,0 @@
-{"success":true,"message":"Supabase Storage connection successful!","bucket":"photos","bucketExists":true,"buckets":["photos"],"filesError":null,"config":{"supabase_url":"✅ Set","anon_key":"✅ Set","service_key":"✅ Set","bucket_name":"❌ Using default"}}

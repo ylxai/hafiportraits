@@ -1,23 +1,13 @@
 name = "hafiportrait"
 compatibility_date = "2024-01-01"
-compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".next"
 
-# Main production environment
+# Production environment for Pages
 [env.production]
-name = "hafiportrait-prod"
-route = "hafiportrait.photography/*"
+name = "hafiportrait"
 
 [env.production.vars]
 NODE_ENV = "production"
 NEXT_PUBLIC_SUPABASE_URL = "https://azspktldiblhrwebzmwq.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3BrdGxkaWJsaHJ3ZWJ6bXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5NDQwNDQsImV4cCI6MjA2OTUyMDA0NH0.uKHB4K9hxUDTc0ZkwidCJv_Ev-oa99AflFvrFt_8MG8"
 NEXT_PUBLIC_APP_URL = "https://hafiportrait.photography"
-
-# Development environment
-[env.development]
-name = "hafiportrait-dev"
-
-[env.development.vars]
-NODE_ENV = "development"
-NEXT_PUBLIC_SUPABASE_URL = "https://azspktldiblhrwebzmwq.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3BrdGxkaWJsaHJ3ZWJ6bXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5NDQwNDQsImV4cCI6MjA2OTUyMDA0NH0.uKHB4K9hxUDTc0ZkwidCJv_Ev-oa99AflFvrFt_8MG8"

@@ -1,8 +1,8 @@
 {
   "EVENT": {
-    "ID": "default-event",
-    "UPLOADER_NAME": "Official Photographer",
-    "ALBUM_NAME": "Official",
+    "ID": "corporate-annual-2024",
+    "UPLOADER_NAME": "Corporate Photographer",
+    "ALBUM_NAME": "Annual Meeting 2024",
     "AUTO_CREATE_EVENT": false
   },
   "CAMERA": {
@@ -24,7 +24,7 @@
     "ENABLED": true,
     "LOCAL_LOGGING": true,
     "LOG_FILE": "./dslr-notifications.log",
-    "MILESTONE_NOTIFICATIONS": true,
+    "MILESTONE_NOTIFICATIONS": false,
     "MILESTONES": [
       10,
       25,
@@ -37,5 +37,5 @@
     "CLIENT_NOTIFICATIONS": false,
     "CLIENT_MILESTONE_THRESHOLD": 50
   },
-  "lastUpdated": "2025-08-03T21:41:20.074Z"
+  "lastUpdated": "2025-08-06T07:42:07.697Z"
 }

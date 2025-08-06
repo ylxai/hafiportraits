@@ -21,11 +21,22 @@ import {
   Calendar,
   Lock,
   Key,
-  CheckCircle
+  CheckCircle,
+  Copy,
+  ExternalLink,
+  Filter,
+  Search,
+  Grid,
+  List,
+  SortAsc,
+  SortDesc,
+  Eye,
+  Clock
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Event, Photo, Message } from "@/lib/database";
+import { useIsMobile, useBreakpoint } from "@/hooks/use-mobile";
+import type { Event, Photo, Message, MessageReactions } from "@/lib/database";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import PhotoLightbox from "@/components/photo-lightbox";
 
@@ -34,6 +45,8 @@ export default function EventPage() {
   const id = params?.id as string;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
+  const breakpoint = useBreakpoint();
   const [uploaderName, setUploaderName] = useState("");
   const [accessCode, setAccessCode] = useState("");
   const [isCodeVerified, setIsCodeVerified] = useState(false);
@@ -42,6 +55,13 @@ export default function EventPage() {
   const [messageText, setMessageText] = useState("");
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  
+  // New enhanced features states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "uploader">("newest");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "official" | "guest">("all");
 
   // Fetch event details
   const { data: event, isLoading: eventLoading } = useQuery({
@@ -94,9 +114,46 @@ export default function EventPage() {
       });
     },
   });
-  const albumPhotos = useMemo(() => {
-    return photos.filter(p => p.album_name === selectedAlbum);
-  }, [photos, selectedAlbum]);
+  // Enhanced photo filtering and sorting
+  const filteredAndSortedPhotos = useMemo(() => {
+    let filtered = photos.filter(p => p.album_name === selectedAlbum);
+    
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(p => 
+        p.uploader_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.original_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply uploader filter
+    if (selectedFilter !== "all") {
+      if (selectedFilter === "official") {
+        filtered = filtered.filter(p => p.uploader_name === "Admin" || p.album_name === "Official");
+      } else if (selectedFilter === "guest") {
+        filtered = filtered.filter(p => p.uploader_name !== "Admin" && p.album_name !== "Official");
+      }
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+        case "oldest":
+          return new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime();
+        case "uploader":
+          return (a.uploader_name || "").localeCompare(b.uploader_name || "");
+        default:
+          return 0;
+      }
+    });
+    
+    return filtered;
+  }, [photos, selectedAlbum, searchTerm, selectedFilter, sortBy]);
+
+  // Keep original albumPhotos for compatibility
+  const albumPhotos = filteredAndSortedPhotos;
   // Photo upload mutation
   const uploadPhotoMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -111,7 +168,7 @@ export default function EventPage() {
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('uploaderName', uploaderName || 'Anonim');
+      formData.append('uploaderName', uploaderName.trim() || 'Anonim');
       formData.append('albumName', selectedAlbum);
 
       // Gunakan apiRequest untuk konsistensi dengan admin dashboard
@@ -128,24 +185,27 @@ export default function EventPage() {
 
       return response.json();
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/events', id, 'photos'] });
+      // Reset form setelah upload berhasil
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      
+      const uploaderDisplayName = uploaderName.trim() || 'Anonim';
+      toast({
+        title: "Foto Berhasil Diupload!",
+        description: `Foto berhasil ditambahkan ke album ${selectedAlbum} oleh ${uploaderDisplayName}.`,
+      });
+      
+      // Opsional: Clear nama setelah upload (uncomment jika diinginkan)
+      // setUploaderName("");
+    },
     onError: (error) => {
       toast({
         title: "Upload Gagal",
         description: error instanceof Error ? error.message : "Terjadi kesalahan saat upload",
-        variant: "destructive",
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/events', id, 'photos'] });
-      toast({
-        title: "Foto Berhasil Diupload!",
-        description: "Foto Anda telah ditambahkan ke album.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Upload Gagal",
-        description: "Silakan coba lagi.",
         variant: "destructive",
       });
     },
@@ -170,6 +230,87 @@ export default function EventPage() {
       toast({
         title: "Gagal",
         description: "Gagal mengirim pesan.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Like message mutation
+  const likeMessageMutation = useMutation({
+    mutationFn: async (messageId: string) => {
+      const response = await apiRequest("POST", `/api/messages/${messageId}/hearts`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/events', id, 'messages'] });
+      toast({
+        title: "❤️ Liked!",
+        description: "Anda menyukai pesan ini.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Gagal",
+        description: "Gagal memberikan like.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Like photo mutation
+  const likePhotoMutation = useMutation({
+    mutationFn: async (photoId: string) => {
+      // Get current photo to increment likes
+      const currentPhoto = photos.find(p => p.id === photoId);
+      const newLikes = (currentPhoto?.likes || 0) + 1;
+      
+      const response = await apiRequest("PATCH", `/api/photos/${photoId}/likes`, {
+        likes: newLikes
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/events', id, 'photos'] });
+      toast({
+        title: "❤️ Liked!",
+        description: "Anda menyukai foto ini.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Gagal",
+        description: "Gagal memberikan like pada foto.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Reaction mutation
+  const addReactionMutation = useMutation({
+    mutationFn: async ({ messageId, reactionType }: { messageId: string; reactionType: keyof MessageReactions }) => {
+      const response = await apiRequest("POST", `/api/messages/${messageId}/reactions`, {
+        reactionType
+      });
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/events', id, 'messages'] });
+      const reactionEmojis = {
+        love: "😍",
+        laugh: "😂",
+        wow: "😮",
+        sad: "😢",
+        angry: "😠"
+      };
+      toast({
+        title: `${reactionEmojis[variables.reactionType]} Reaction Added!`,
+        description: `Anda memberikan reaksi ${variables.reactionType}.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Gagal",
+        description: "Gagal memberikan reaksi.",
         variant: "destructive",
       });
     },
@@ -218,6 +359,27 @@ export default function EventPage() {
     });
   };
 
+  const handleLikeMessage = (messageId: string) => {
+    likeMessageMutation.mutate(messageId);
+  };
+
+  const handleAddReaction = (messageId: string, reactionType: keyof MessageReactions) => {
+    addReactionMutation.mutate({ messageId, reactionType });
+  };
+
+  const handleLikePhoto = (photoId: string) => {
+    likePhotoMutation.mutate(photoId);
+  };
+
+  const handleDeletePhoto = (photoId: string) => {
+    // Implementasi delete foto jika diperlukan
+    console.log('Delete photo:', photoId);
+    toast({
+      title: "Info",
+      description: "Fitur hapus foto belum tersedia.",
+    });
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
@@ -251,222 +413,446 @@ export default function EventPage() {
     setSelectedPhotoIndex(photoIndexInAlbum);
     setIsLightboxOpen(true);
   };
+
+  // Enhanced features handlers
+  const handleShareEvent = () => {
+    setShowShareModal(true);
+  };
+
+  const handleCopyLink = async (text: string, type: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Berhasil Disalin!",
+        description: `${type} telah disalin ke clipboard.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Gagal Menyalin",
+        description: "Tidak dapat menyalin ke clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadPhoto = async (photoUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(photoUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Download Berhasil!",
+        description: `Foto ${fileName} telah didownload.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Download Gagal",
+        description: "Tidak dapat mendownload foto.",
+        variant: "destructive",
+      });
+    }
+  };
   
 
   const needsAccessCode = (selectedAlbum === "Tamu" || selectedAlbum === "Bridesmaid") && !isCodeVerified;
 
   return (
     <div className="min-h-screen bg-wedding-ivory">
-      {/* Header */}
-      <header className="bg-white/90 backdrop-blur-sm border-b border-wedding-gold/20 p-2">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">{event.name}</h1>
-              <p className="text-gray-600 text-sm">
+      {/* Mobile-Optimized Header */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-wedding-gold/20 shadow-sm">
+        <div className="mobile-container">
+          <div className={`flex items-center justify-between ${isMobile ? 'py-3' : 'py-4'}`}>
+            <div className="flex-1 min-w-0">
+              <h1 className={`font-bold text-gray-800 truncate ${
+                isMobile ? 'text-xl leading-tight' : 'text-3xl'
+              }`}>
+                {event.name}
+              </h1>
+              <p className={`text-gray-600 truncate ${
+                isMobile ? 'text-xs mt-1' : 'text-sm'
+              }`}>
                 {new Date(event.date).toLocaleDateString('id-ID', { 
-                  weekday: 'long', 
+                  weekday: isMobile ? 'short' : 'long', 
                   year: 'numeric', 
-                  month: 'long', 
+                  month: isMobile ? 'short' : 'long', 
                   day: 'numeric' 
                 })}
               </p>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
               <Button
                 variant="outline"
-                size="sm"
+                size={isMobile ? "sm" : "default"}
                 onClick={() => copyToClipboard(event.shareable_link)}
+                className={`mobile-button ${isMobile ? 'px-3 py-2' : ''}`}
               >
-                <Share2 className="h-4 w-4" /> 
+                <Share2 className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                {!isMobile && <span className="ml-2">Share</span>}
               </Button>
               <Button
                 variant="outline"
-                size="sm"
+                size={isMobile ? "sm" : "default"}
                 onClick={() => window.open(event.qr_code, '_blank')}
+                className={`mobile-button ${isMobile ? 'px-3 py-2' : ''}`}
               >
-                <QrCode className="h-4 w-4" />
+                <QrCode className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                {!isMobile && <span className="ml-2">QR</span>}
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-4">
-        {/* Access Code Section for Tamu and Bridesmaid */}
+      <div className="mobile-container mobile-spacing">
+        {/* Mobile-Optimized Access Code Section */}
         {needsAccessCode && (
-          <Card className="mb-4 max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
+          <Card className={`mb-6 mx-auto ${isMobile ? 'mobile-card' : 'max-w-md'}`}>
+            <CardHeader className={isMobile ? 'mobile-card-header' : ''}>
+              <CardTitle className={`flex items-center gap-2 ${
+                isMobile ? 'mobile-card-title text-lg' : ''
+              }`}>
+                <Lock className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
                 Masukkan Kode Akses
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-gray-600">
+            <CardContent className={`space-y-4 ${isMobile ? 'mobile-card-content' : ''}`}>
+              <p className={`text-gray-600 ${isMobile ? 'text-sm leading-relaxed' : 'text-sm'}`}>
                 Album "{selectedAlbum}" memerlukan kode akses untuk mengupload foto. 
                 Dapatkan kode dari penyelenggara acara.
               </p>
-              <div className="flex space-x-2">
+              <div className={`flex ${isMobile ? 'gap-3' : 'gap-2'}`}>
                 <Input
                   type="text"
                   placeholder="Masukkan kode akses"
                   value={accessCode}
                   onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                  className="uppercase"
+                  className={`uppercase ${isMobile ? 'mobile-input text-lg' : ''}`}
                 />
                 <Button
                   onClick={() => verifyCodeMutation.mutate(accessCode)}
                   disabled={!accessCode.trim() || verifyCodeMutation.isPending}
+                  className={isMobile ? 'mobile-button px-4' : ''}
                 >
-                  <Key className="h-4 w-4" />
+                  <Key className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Main Tabs */}
+        {/* Mobile-Optimized Tabs */}
         <Tabs value={selectedAlbum} onValueChange={setSelectedAlbum} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-
-            <TabsTrigger value="Official">Official</TabsTrigger>
-            <TabsTrigger value="Tamu">Tamu</TabsTrigger>
-            <TabsTrigger value="Bridesmaid">Bridesmaid</TabsTrigger>
-            <TabsTrigger value="Guestbook">Guestbook</TabsTrigger>
-          </TabsList>
-
-          {/* Ganti ketiga TabsContent Anda dengan blok ini */}
-
-  <TabsContent key={selectedAlbum} value={selectedAlbum} className="space-y-6">
-    <div className="text-center">
-      <h2 className="text-2xl font-bold mb-2">Foto {selectedAlbum}</h2>
-      <p className="text-gray-600 mb-6">
-        {/* Deskripsi bisa dibuat dinamis jika perlu */}
-        {selectedAlbum === "Official" && "Foto resmi dari fotografer acara"}
-        {selectedAlbum === "Tamu" && "Upload dan lihat foto dari para tamu"}
-        {selectedAlbum === "Bridesmaid" && "Album khusus untuk para bridesmaid"}
-      </p>
-    </div>
-
-    {/* Tampilkan form upload HANYA jika albumnya "Tamu" atau "Bridesmaid" */}
-    {(selectedAlbum === "Tamu" || selectedAlbum === "Bridesmaid") && !needsAccessCode && (
-      <Card className="p-4 sm:p-6 mobile-input">
-        <div className="space-y-4">
-    <div className="flex items-center justify-center w-full">
-      <label className="flex flex-col items-center justify-center w-full h-32 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100">
-        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-          <Upload 
-            className={`w-8 h-8 mb-3 ${
-              selectedAlbum === 'Tamu' ? 'text-wedding-rose' : 'text-wedding-sage'
-            }`} 
-          />
-          <p className="mb-2 text-sm text-gray-500">
-            <span className="font-semibold">Ketuk untuk upload foto</span>
-          </p>
-          <p className="text-xs text-gray-500">PNG, JPG, GIF (maks. 10MB)</p>
-        </div>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
-      </label>
-    </div>
-    <Input
-      type="text"
-      placeholder="Nama Anda (opsional)"
-      value={uploaderName}
-      onChange={(e) => setUploaderName(e.target.value)}
-      className="text-base"
-    />
-    {uploadPhotoMutation.isPending && (
-      <div className="flex items-center justify-center py-2">
-        <LoadingSpinner />
-        <span className="ml-2 text-sm text-gray-600">Mengupload foto...</span>
-      </div>
-    )}
-  </div>
-      </Card>
-    )}
-    
-    {/* Logika untuk menampilkan galeri foto */}
-    {photosLoading ? (
-      <div className="text-center py-8"><LoadingSpinner /></div>
-    ) : // Cek apakah album yang sedang di-render sama dengan album yang dipilih
-      // dan apakah ada foto di dalamnya
-      albumPhotos.length > 0 ? (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {albumPhotos.map((photo, index) => (
-          <div 
-            key={photo.id} 
-            className="relative group cursor-pointer"
-            onClick={() => handlePhotoClick(index)}
-          >
-            <img
-              src={photo.url}
-              alt={photo.original_name}
-              className="w-full h-48 object-cover rounded-lg"
-            />
-            {/* Overlay saat hover */}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all rounded-lg flex items-center justify-center">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white">
-                <div className="flex items-center space-x-2">
-                  <Heart className="h-4 w-4" />
-                  <span>{photo.likes || 0}</span>
-                </div>
-              </div>
-            </div>
+          <div className={isMobile ? 'mobile-tabs-container' : ''}>
+            <TabsList className={`${
+              isMobile 
+                ? 'mobile-tabs-list grid grid-cols-4 h-auto p-1' 
+                : 'grid w-full grid-cols-4'
+            }`}>
+              <TabsTrigger 
+                value="Official" 
+                className={isMobile ? 'mobile-tab text-xs py-3' : ''}
+              >
+                {isMobile ? 'Official' : 'Official'}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="Tamu" 
+                className={isMobile ? 'mobile-tab text-xs py-3' : ''}
+              >
+                {isMobile ? 'Tamu' : 'Tamu'}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="Bridesmaid" 
+                className={isMobile ? 'mobile-tab text-xs py-3' : ''}
+              >
+                {isMobile ? 'Bridesmaid' : 'Bridesmaid'}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="Guestbook" 
+                className={isMobile ? 'mobile-tab text-xs py-3' : ''}
+              >
+                {isMobile ? 'Guestbook' : 'Guestbook'}
+              </TabsTrigger>
+            </TabsList>
           </div>
-        ))}
-      </div>
-    ) : (
-      // Tampilan jika tidak ada foto
-      <div className="text-center py-12 text-gray-500">
-        <Camera className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-        <p>Belum ada foto di album {selectedAlbum}.</p>
-      </div>
-    )}
-  </TabsContent>
+
+          {/* Photo Tabs Content */}
+          {["Official", "Tamu", "Bridesmaid"].map((album) => (
+            <TabsContent key={album} value={album} className={isMobile ? 'space-y-4' : 'space-y-6'}>
+              <div className="text-center">
+                <h2 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
+                  Foto {album}
+                </h2>
+                <p className={`text-gray-600 mb-4 ${isMobile ? 'text-sm' : 'mb-6'}`}>
+                  {album === "Official" && "Foto resmi dari fotografer acara"}
+                  {album === "Tamu" && "Upload dan lihat foto dari para tamu"}
+                  {album === "Bridesmaid" && "Album khusus untuk para bridesmaid"}
+                </p>
+              </div>
+
+              {/* Upload Form - Only for Tamu and Bridesmaid */}
+              {(album === "Tamu" || album === "Bridesmaid") && !needsAccessCode && (
+      <Card className={`${isMobile ? 'mobile-card mobile-padding' : 'p-4 sm:p-6'}`}>
+        <div className={isMobile ? 'mobile-spacing' : 'space-y-4'}>
+          {/* Simplified Upload Area */}
+          <div className="flex items-center justify-center w-full">
+            <label className={`
+              flex flex-col items-center justify-center w-full cursor-pointer rounded-lg
+              border-2 border-dashed transition-all duration-200
+              ${uploadPhotoMutation.isPending 
+                ? 'border-gray-200 bg-gray-50 cursor-not-allowed' 
+                : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+              }
+              ${isMobile ? 'h-32' : 'h-28'}
+            `}>
+              <div className={`flex flex-col items-center justify-center text-center ${
+                isMobile ? 'px-4 py-6' : 'pt-4 pb-5'
+              }`}>
+                <Upload 
+                  className={`mb-3 transition-colors ${
+                    isMobile ? 'w-8 h-8' : 'w-7 h-7'
+                  } ${
+                    uploadPhotoMutation.isPending 
+                      ? 'text-gray-400' 
+                      : album === 'Tamu' ? 'text-wedding-rose' : 'text-wedding-sage'
+                  }`} 
+                />
+                <p className={`mb-1 font-medium ${
+                  isMobile ? 'text-sm' : 'text-sm'
+                } ${
+                  uploadPhotoMutation.isPending ? 'text-gray-400' : 'text-gray-700'
+                }`}>
+                  {uploadPhotoMutation.isPending ? 'Mengupload...' : 'Ketuk untuk upload foto'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  PNG, JPG, GIF (maks. 10MB)
+                </p>
+              </div>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={uploadPhotoMutation.isPending}
+              />
+            </label>
+          </div>
+          
+          {/* Simplified Name Input */}
+          <div className={isMobile ? 'space-y-3' : 'space-y-2'}>
+            <div className={`flex ${isMobile ? 'gap-2' : 'gap-2'}`}>
+              <Input
+                type="text"
+                placeholder="Nama Anda (opsional)"
+                value={uploaderName}
+                onChange={(e) => setUploaderName(e.target.value)}
+                className={`flex-1 ${
+                  isMobile 
+                    ? 'h-10 px-3 text-base' 
+                    : 'text-base'
+                }`}
+                disabled={uploadPhotoMutation.isPending}
+              />
+              {uploaderName.trim() && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setUploaderName("")}
+                  disabled={uploadPhotoMutation.isPending}
+                  className="px-3 h-10"
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
+            
+            {/* Simple Feedback - Only show when name is entered */}
+            {uploaderName.trim() && (
+              <p className="text-xs text-green-600 flex items-center gap-2">
+                <CheckCircle className="h-3 w-3" />
+                Foto akan diupload atas nama: <strong>{uploaderName.trim()}</strong>
+              </p>
+            )}
+          </div>
+          
+          {/* Simple Loading State */}
+          {uploadPhotoMutation.isPending && (
+            <div className="flex items-center justify-center py-3">
+              <LoadingSpinner />
+              <span className="ml-2 text-sm text-gray-600">
+                Mengupload foto...
+              </span>
+            </div>
+          )}
+        </div>
+      </Card>
+              )}
+              
+              {/* Photo Gallery */}
+              {photosLoading ? (
+                <div className={`text-center ${isMobile ? 'py-12' : 'py-8'}`}>
+                  <LoadingSpinner />
+                  {isMobile && (
+                    <p className="mt-4 text-sm text-gray-500">Memuat foto...</p>
+                  )}
+                </div>
+              ) : albumPhotos.filter(p => p.album_name === album).length > 0 ? (
+                <div className={`photo-grid ${
+                  isMobile 
+                    ? 'grid-cols-2 gap-3' 
+                    : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+                }`}>
+                  {albumPhotos.filter(p => p.album_name === album).map((photo, index) => (
+                    <div 
+                      key={photo.id} 
+                      className={`relative group cursor-pointer touch-feedback ${
+                        isMobile ? 'rounded-xl overflow-hidden' : 'rounded-lg overflow-hidden'
+                      }`}
+                      onClick={() => handlePhotoClick(index)}
+                    >
+                      <img
+                        src={photo.url}
+                        alt={photo.original_name}
+                        className={`w-full object-cover transition-transform duration-200 ${
+                          isMobile 
+                            ? 'h-40 group-active:scale-95' 
+                            : 'h-48 group-hover:scale-105'
+                        }`}
+                        loading="lazy"
+                      />
+                      
+                      {/* Mobile-Optimized Overlay */}
+                      <div className={`absolute inset-0 transition-all duration-200 flex items-end ${
+                        isMobile 
+                          ? 'bg-gradient-to-t from-black/60 via-transparent to-transparent' 
+                          : 'bg-black/0 group-hover:bg-black/30'
+                      }`}>
+                        <div className={`transition-opacity duration-200 text-white ${
+                          isMobile 
+                            ? 'opacity-100 p-3 w-full' 
+                            : 'opacity-0 group-hover:opacity-100 flex items-center justify-center w-full h-full'
+                        }`}>
+                          <div className={`flex items-center ${
+                            isMobile ? 'justify-between w-full' : 'space-x-2'
+                          }`}>
+                            <div className="flex items-center space-x-2">
+                              <Heart className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'}`} />
+                              <span className={`${isMobile ? 'text-sm font-medium' : 'text-sm'}`}>
+                                {photo.likes || 0}
+                              </span>
+                            </div>
+                            {isMobile && photo.uploader_name && (
+                              <span className="text-xs opacity-80 truncate max-w-20">
+                                {photo.uploader_name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Mobile Touch Indicator */}
+                      {isMobile && (
+                        <div className="absolute top-2 right-2 bg-black/20 rounded-full p-1">
+                          <div className="w-2 h-2 bg-white/80 rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={`text-center text-gray-500 ${
+                  isMobile ? 'py-16 px-6' : 'py-12'
+                }`}>
+                  <div className={`${
+                    isMobile ? 'bg-gray-50 rounded-2xl p-8' : ''
+                  }`}>
+                    <Camera className={`mx-auto mb-4 text-gray-300 ${
+                      isMobile ? 'h-16 w-16' : 'h-12 w-12'
+                    }`} />
+                    <p className={`${
+                      isMobile ? 'text-base font-medium mb-2' : 'text-sm'
+                    }`}>
+                      Belum ada foto di album {album}
+                    </p>
+                    {isMobile && (album === "Tamu" || album === "Bridesmaid") && (
+                      <p className="text-sm text-gray-400">
+                        Jadilah yang pertama upload foto!
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          ))}
+
+          {/* Separate Guestbook Tab - NO PHOTOS */}
 
 
-          {/* Guestbook Tab */}
-          <TabsContent value="Guestbook" className="space-y-6">
+          {/* Simplified Guestbook Tab */}
+          <TabsContent value="Guestbook" className={isMobile ? 'space-y-4' : 'space-y-6'}>
             <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">Buku Tamu Digital</h2>
-              <p className="text-gray-600 mb-6">Tinggalkan pesan dan ucapan untuk pengantin</p>
+              <h2 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
+                Buku Tamu Digital
+              </h2>
+              <p className={`text-gray-600 mb-4 ${isMobile ? 'text-sm' : 'mb-6'}`}>
+                Tinggalkan pesan dan ucapan untuk pengantin
+              </p>
             </div>
 
-            {/* Message Form */}
-            <Card className="p-6">
+            {/* Simplified Message Form */}
+            <Card className={`${isMobile ? 'p-4' : 'p-6'}`}>
               <div className="space-y-4">
                 <Input
                   type="text"
                   placeholder="Nama Anda"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
+                  className={isMobile ? 'h-10 text-base' : ''}
+                  disabled={addMessageMutation.isPending}
                 />
                 <Textarea
                   placeholder="Tulis pesan atau ucapan Anda..."
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   rows={3}
+                  className={isMobile ? 'text-base resize-none' : ''}
+                  disabled={addMessageMutation.isPending}
                 />
+                
+                {/* Simple Submit Button */}
                 <Button
                   onClick={handleSubmitMessage}
-                  disabled={addMessageMutation.isPending}
-                  className="w-full bg-wedding-gold text-black hover:bg-wedding-gold/90"
+                  disabled={addMessageMutation.isPending || !guestName.trim() || !messageText.trim()}
+                  className={`w-full bg-wedding-gold text-black hover:bg-wedding-gold/90 ${
+                    isMobile ? 'h-11' : ''
+                  }`}
                 >
-                  <MessageSquare className="h-4 w-4" />
-                  {addMessageMutation.isPending ? "Mengirim..." : "Kirim Pesan"}
+                  {addMessageMutation.isPending ? (
+                    <div className="flex items-center gap-2">
+                      <LoadingSpinner />
+                      <span>Mengirim...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Kirim Pesan</span>
+                    </div>
+                  )}
                 </Button>
               </div>
             </Card>
 
-            {/* Messages List */}
+            {/* Simple Messages List */}
             {messagesLoading ? (
               <div className="text-center py-8">
                 <LoadingSpinner />
@@ -475,28 +861,92 @@ export default function EventPage() {
               <div className="space-y-4">
                 {messages.map((message) => (
                   <Card key={message.id} className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-800">{message.guest_name}</h4>
-                        <p className="text-gray-600 mt-1">{message.message}</p>
-                        <p className="text-xs text-gray-400 mt-2">
-                          {new Date(message.created_at).toLocaleDateString('id-ID', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-800">{message.guest_name}</h4>
+                          <p className="text-gray-600 mt-1">{message.message}</p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            {new Date(message.created_at).toLocaleDateString('id-ID', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleLikeMessage(message.id)}
+                          disabled={likeMessageMutation.isPending}
+                          className={`flex items-center space-x-1 text-wedding-rose hover:bg-wedding-rose/10 transition-all duration-200 ${
+                            likeMessageMutation.isPending ? 'opacity-50' : 'hover:scale-105'
+                          }`}
+                        >
+                          <Heart className={`h-4 w-4 ${
+                            likeMessageMutation.isPending ? 'animate-pulse' : ''
+                          }`} />
+                          <span className="font-medium">{message.hearts || 0}</span>
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center space-x-1 text-wedding-rose hover:bg-wedding-rose/10"
-                      >
-                        <Heart className="h-4 w-4" />
-                        <span>{message.hearts || 0}</span>
-                      </Button>
+                      
+                      {/* Reactions Section */}
+                      <div className="border-t pt-3">
+                        {/* Display existing reactions */}
+                        {message.reactions && Object.values(message.reactions).some(count => count > 0) && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {Object.entries(message.reactions).map(([reaction, count]) => {
+                              if (count === 0) return null;
+                              const reactionEmojis = {
+                                love: "😍",
+                                laugh: "😂", 
+                                wow: "😮",
+                                sad: "😢",
+                                angry: "😠"
+                              };
+                              return (
+                                <span
+                                  key={reaction}
+                                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm"
+                                >
+                                  <span>{reactionEmojis[reaction as keyof MessageReactions]}</span>
+                                  <span className="font-medium">{count}</span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                        
+                        {/* Reaction buttons */}
+                        <div className="flex flex-wrap gap-1">
+                          {(['love', 'laugh', 'wow', 'sad', 'angry'] as const).map((reactionType) => {
+                            const reactionEmojis = {
+                              love: "😍",
+                              laugh: "😂",
+                              wow: "😮", 
+                              sad: "😢",
+                              angry: "😠"
+                            };
+                            return (
+                              <Button
+                                key={reactionType}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAddReaction(message.id, reactionType)}
+                                disabled={addReactionMutation.isPending}
+                                className={`p-2 h-8 w-8 hover:scale-110 transition-all duration-200 ${
+                                  addReactionMutation.isPending ? 'opacity-50' : ''
+                                }`}
+                                title={`React with ${reactionType}`}
+                              >
+                                <span className="text-lg">{reactionEmojis[reactionType]}</span>
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </Card>
                 ))}
@@ -511,12 +961,12 @@ export default function EventPage() {
         </Tabs>
         {isLightboxOpen && selectedPhotoIndex !== null && (
           <PhotoLightbox
-            photos={albumPhotos} 
+            photos={albumPhotos.filter(p => p.album_name === selectedAlbum)} 
             currentIndex={selectedPhotoIndex}
             onClose={() => setIsLightboxOpen(false)}
-            onDelete={() => { /* Implementasi Hapus */ }}
-            onLike={() => { /* Implementasi Suka */ }}
-            onUnlike={() => { /* Implementasi Batal Suka */ }}
+            onDelete={handleDeletePhoto}
+            onLike={handleLikePhoto}
+            onUnlike={() => { /* Implementasi Batal Suka jika diperlukan */ }}
           />
         )}
       </div>

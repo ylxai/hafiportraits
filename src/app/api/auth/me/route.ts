@@ -6,6 +6,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { corsResponse, corsErrorResponse, handleOptions } from '@/lib/cors';
+
+// Handle OPTIONS preflight requests
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,10 +19,7 @@ export async function GET(request: NextRequest) {
     const sessionId = cookieStore.get('admin_session')?.value;
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: 'No active session' },
-        { status: 401 }
-      );
+      return corsErrorResponse('No active session', 401);
     }
 
     // Validate session
@@ -32,14 +35,11 @@ export async function GET(request: NextRequest) {
         path: '/'
       });
 
-      return NextResponse.json(
-        { error: 'Invalid or expired session' },
-        { status: 401 }
-      );
+      return corsErrorResponse('Invalid or expired session', 401);
     }
 
     // Return user data (without sensitive info)
-    return NextResponse.json({
+    return corsResponse({
       success: true,
       user: {
         id: user.id,
@@ -53,9 +53,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Session validation error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return corsErrorResponse('Internal server error', 500);
   }
 }

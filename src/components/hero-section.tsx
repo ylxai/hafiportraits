@@ -70,15 +70,15 @@ export default function HeroSection() {
             variants={buttonVariants}
             initial="hidden"
             animate="visible"
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center px-4"
           >
             <Button 
               asChild
               size="lg" 
-              className="btn-dynamic-primary text-lg py-6 px-8 transform hover:scale-105 transition-all duration-300"
+              className="btn-dynamic-primary mobile-button text-base sm:text-lg py-4 sm:py-6 px-6 sm:px-8 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto"
             >
               <a href="#contact">
-                <Camera className="w-6 h-6 mr-2" />
+                <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                 📞 Hubungi Kami
               </a>
             </Button>
@@ -87,16 +87,16 @@ export default function HeroSection() {
               asChild
               variant="outline" 
               size="lg"
-              className="btn-dynamic-secondary text-lg py-6 px-8 transform hover:scale-105 transition-all duration-300"
+              className="btn-dynamic-secondary mobile-button text-base sm:text-lg py-4 sm:py-6 px-6 sm:px-8 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto"
             >
               <a href="#gallery">
-                <Heart className="w-6 h-6 mr-2" />
+                <Heart className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                 💫 Lihat Portfolio
               </a>
             </Button>
           </motion.div>
 
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-4 sm:px-0">
             {[
               { 
                 icon: Camera, 

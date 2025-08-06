@@ -49,24 +49,8 @@ export default function AdminDashboardGrouped() {
   const auth = useRequireAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Show loading while checking authentication
-  if (auth.isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated (will be redirected by useRequireAuth)
-  if (!auth.isAuthenticated) {
-    return null;
-  }
   
+  // All state hooks must be called before any conditional returns
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [isEventFormOpen, setIsEventFormOpen] = useState(false);
@@ -78,6 +62,7 @@ export default function AdminDashboardGrouped() {
   const [isHomepageUploadOpen, setIsHomepageUploadOpen] = useState(false);
   const [isOfficialUploadOpen, setIsOfficialUploadOpen] = useState(false);
 
+  // All hooks must be called before conditional returns
   // Fetch admin stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/admin/stats'],
@@ -387,6 +372,23 @@ export default function AdminDashboardGrouped() {
     setIsEventFormOpen(false);
   };
   
+  // Conditional returns after all hooks are called
+  // Show loading while checking authentication
+  if (auth.isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will be redirected by useRequireAuth)
+  if (!auth.isAuthenticated) {
+    return null;
+  }
 
   return (
     <ColorPaletteProvider>

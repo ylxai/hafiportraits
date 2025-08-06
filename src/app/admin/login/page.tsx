@@ -31,7 +31,9 @@ export default function AdminLoginPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        // Force localhost URL for development
+        const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+        const response = await fetch(`${baseUrl}/api/auth/me`);
         if (response.ok) {
           router.replace(redirectTo);
         }
@@ -48,7 +50,9 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // Force localhost URL for development
+      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -44,7 +44,9 @@ export function useAuth(): AuthState & AuthActions {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await fetch('/api/auth/me', {
+      // Force localhost URL for development
+      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+      const response = await fetch(`${baseUrl}/api/auth/me`, {
         credentials: 'include',
       });
 
@@ -80,7 +82,9 @@ export function useAuth(): AuthState & AuthActions {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      const response = await fetch('/api/auth/login', {
+      // Force localhost URL for development
+      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +126,9 @@ export function useAuth(): AuthState & AuthActions {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
 
-      await fetch('/api/auth/logout', {
+      // Force localhost URL for development
+      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+      await fetch(`${baseUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });

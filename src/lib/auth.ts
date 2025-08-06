@@ -5,7 +5,18 @@
 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Create Supabase client with service role key for admin operations
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || 'hafiportrait-secret-key-change-in-production';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
@@ -94,7 +105,7 @@ export async function createDefaultAdminUsers(): Promise<void> {
   for (const user of defaultUsers) {
     try {
       // Check if user already exists
-      const { data: existingUser } = await supabase
+      const { data: existingUser } = await supabaseAdmin
         .from('admin_users')
         .select('id')
         .eq('username', user.username)
@@ -103,7 +114,7 @@ export async function createDefaultAdminUsers(): Promise<void> {
       if (!existingUser) {
         const hashedPassword = await hashPassword(user.password);
         
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('admin_users')
           .insert({
             username: user.username,
@@ -132,7 +143,7 @@ export async function createDefaultAdminUsers(): Promise<void> {
  */
 export async function authenticateUser(credentials: LoginCredentials): Promise<AdminUser | null> {
   try {
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabaseAdmin
       .from('admin_users')
       .select('*')
       .eq('username', credentials.username)
@@ -149,7 +160,7 @@ export async function authenticateUser(credentials: LoginCredentials): Promise<A
     }
 
     // Update last login
-    await supabase
+    await supabaseAdmin
       .from('admin_users')
       .update({ last_login: new Date().toISOString() })
       .eq('id', user.id);
@@ -174,7 +185,7 @@ export async function createSession(
   const sessionId = generateSessionId();
   const expiresAt = new Date(Date.now() + SESSION_DURATION).toISOString();
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('admin_sessions')
     .insert({
       id: sessionId,
@@ -196,7 +207,7 @@ export async function createSession(
  */
 export async function validateSession(sessionId: string): Promise<AdminUser | null> {
   try {
-    const { data: session, error } = await supabase
+    const { data: session, error } = await supabaseAdmin
       .from('admin_sessions')
       .select(`
         *,
@@ -223,7 +234,7 @@ export async function validateSession(sessionId: string): Promise<AdminUser | nu
  * Destroy session (logout)
  */
 export async function destroySession(sessionId: string): Promise<void> {
-  await supabase
+  await supabaseAdmin
     .from('admin_sessions')
     .delete()
     .eq('id', sessionId);
@@ -233,7 +244,7 @@ export async function destroySession(sessionId: string): Promise<void> {
  * Clean up expired sessions
  */
 export async function cleanupExpiredSessions(): Promise<void> {
-  await supabase
+  await supabaseAdmin
     .from('admin_sessions')
     .delete()
     .lt('expires_at', new Date().toISOString());
@@ -252,7 +263,7 @@ export async function logActivity(
   userAgent?: string
 ): Promise<void> {
   try {
-    await supabase
+    await supabaseAdmin
       .from('admin_activity_logs')
       .insert({
         user_id: userId,
@@ -280,7 +291,7 @@ function generateSessionId(): string {
  */
 export async function getUserById(userId: number): Promise<AdminUser | null> {
   try {
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabaseAdmin
       .from('admin_users')
       .select('id, username, email, full_name, role, is_active, last_login, created_at')
       .eq('id', userId)

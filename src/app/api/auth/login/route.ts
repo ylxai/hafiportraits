@@ -6,6 +6,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser, createSession, logActivity } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { corsResponse, corsErrorResponse, handleOptions } from '@/lib/cors';
+
+// Handle OPTIONS preflight requests
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,10 +19,7 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     if (!username || !password) {
-      return NextResponse.json(
-        { error: 'Username and password are required' },
-        { status: 400 }
-      );
+      return corsErrorResponse('Username and password are required', 400);
     }
 
     // Get client info
@@ -38,10 +41,7 @@ export async function POST(request: NextRequest) {
         userAgent
       );
 
-      return NextResponse.json(
-        { error: 'Invalid username or password' },
-        { status: 401 }
-      );
+      return corsErrorResponse('Invalid username or password', 401);
     }
 
     // Create session
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Return user data (without sensitive info)
-    return NextResponse.json({
+    return corsResponse({
       success: true,
       user: {
         id: user.id,
@@ -83,9 +83,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return corsErrorResponse('Internal server error', 500);
   }
 }

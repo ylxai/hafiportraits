@@ -47,7 +47,11 @@ export function useAuth(): AuthState & AuthActions {
       // Force localhost URL for development
       const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
       const response = await fetch(`${baseUrl}/api/auth/me`, {
+        method: 'GET',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (response.ok) {
@@ -86,11 +90,11 @@ export function useAuth(): AuthState & AuthActions {
       const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
-        credentials: 'include',
       });
 
       const data = await response.json();
@@ -131,6 +135,9 @@ export function useAuth(): AuthState & AuthActions {
       await fetch(`${baseUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       setState({

@@ -27,22 +27,8 @@ export default function AdminLoginPage() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/admin';
 
-  // Check if already authenticated
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Force localhost URL for development
-        const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
-        const response = await fetch(`${baseUrl}/api/auth/me`);
-        if (response.ok) {
-          router.replace(redirectTo);
-        }
-      } catch (error) {
-        // Not authenticated, stay on login page
-      }
-    };
-    checkAuth();
-  }, [router, redirectTo]);
+  // Note: Removed auth check to prevent 401 console errors on login page
+  // Authentication will be handled by middleware and useRequireAuth hook
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +40,7 @@ export default function AdminLoginPage() {
       const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -75,10 +62,6 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleQuickLogin = (user: 'hafi' | 'nandika') => {
-    setUsername(user);
-    setPassword('Hantu@112233');
-  };
 
   return (
     <ColorPaletteProvider>
@@ -187,32 +170,6 @@ export default function AdminLoginPage() {
                 </Button>
               </form>
 
-              {/* Quick Login for Development */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="pt-4 border-t">
-                  <p className="text-xs text-gray-500 text-center mb-3">Quick Login (Development)</p>
-                  <div className="flex space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickLogin('hafi')}
-                      className="flex-1"
-                    >
-                      Login as Hafi
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickLogin('nandika')}
-                      className="flex-1"
-                    >
-                      Login as Nandika
-                    </Button>
-                  </div>
-                </div>
-              )}
 
               {/* Security Notice */}
               <div className="pt-4 border-t">

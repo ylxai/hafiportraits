@@ -1,3 +1,5 @@
 {
-  "/admin/login/page": "app/admin/login/page.js"
+  "/api/admin/events/route": "app/api/admin/events/route.js",
+  "/api/admin/stats/route": "app/api/admin/stats/route.js",
+  "/api/admin/photos/homepage/route": "app/api/admin/photos/homepage/route.js"
 }

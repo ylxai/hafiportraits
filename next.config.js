@@ -10,8 +10,8 @@ const nextConfig = {
   },
   // Cloudflare Pages configuration
   images: {
-    unoptimized: true, // Required for production
-    domains: ['localhost', 'api.qrserver.com', 'azspktldiblhrwebzmwq.supabase.co', 'ipvhepiuwpol.ap-southeast-1.clawcloudrun.com'],
+    unoptimized: true, // Required for Cloudflare Workers
+    domains: ['localhost', 'api.qrserver.com', 'azspktldiblhrwebzmwq.supabase.co', 'hafiportrait.photography'],
   },
   experimental: {
     serverComponentsExternalPackages: ['@neondatabase/serverless']

@@ -1,0 +1,304 @@
+{
+  "config": {
+    "SUPABASE_URL": "https://azspktldiblhrwebzmwq.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3BrdGxkaWJsaHJ3ZWJ6bXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5NDQwNDQsImV4cCI6MjA2OTUyMDA0NH0.uKHB4K9hxUDTc0ZkwidCJv_Ev-oa99AflFvrFt_8MG8",
+    "CONCURRENT_CONNECTIONS": 20,
+    "OPERATIONS_PER_CONNECTION": 50,
+    "TEST_EVENT_NAME": "DB Stress Test Event"
+  },
+  "stats": {
+    "totalConnections": 20,
+    "totalOperations": 20,
+    "successfulOperations": 0,
+    "failedOperations": 20,
+    "totalTestTime": 920,
+    "averageOperationTime": 0,
+    "minOperationTime": null,
+    "maxOperationTime": 0,
+    "operationsPerSecond": 0,
+    "operationTypes": {}
+  },
+  "connectionResults": [
+    {
+      "connectionId": 1,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 899,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 899,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 2,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 660,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 660,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 3,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 633,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 633,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 4,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 631,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 631,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 5,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 638,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 638,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 6,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 764,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 764,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 7,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 630,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 630,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 8,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 661,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 661,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 9,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 654,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 654,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 10,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 898,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 898,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 11,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 917,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 917,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 12,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 894,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 894,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 13,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 631,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 631,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 14,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 893,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 893,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 15,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 631,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 631,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 16,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 894,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 894,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 17,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 638,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 638,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 18,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 647,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 647,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 19,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 898,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 898,
+      "successCount": 0,
+      "errorCount": 1
+    },
+    {
+      "connectionId": 20,
+      "operations": [
+        {
+          "type": "CONNECTION_ERROR",
+          "time": 631,
+          "status": "error",
+          "error": "Event creation failed: Could not find the 'description' column of 'events' in the schema cache"
+        }
+      ],
+      "totalTime": 631,
+      "successCount": 0,
+      "errorCount": 1
+    }
+  ],
+  "timestamp": "2025-08-06T18:30:47.827Z"
+}

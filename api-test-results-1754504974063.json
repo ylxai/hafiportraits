@@ -1,0 +1,79 @@
+{
+  "summary": {
+    "total": 9,
+    "passed": 0,
+    "failed": 9,
+    "successRate": 0,
+    "totalTime": 5
+  },
+  "tests": [
+    {
+      "name": "Health Check",
+      "status": "FAIL",
+      "duration": 0,
+      "error": "fetch is not a function"
+    },
+    {
+      "name": "Authentication",
+      "status": "FAIL",
+      "duration": 0,
+      "error": "fetch is not a function"
+    },
+    {
+      "name": "Protected Route Access",
+      "status": "FAIL",
+      "duration": 0,
+      "error": "No auth token available"
+    },
+    {
+      "name": "Event CRUD Operations",
+      "status": "FAIL",
+      "duration": 0,
+      "error": "No auth token available"
+    },
+    {
+      "name": "Photo Upload & Retrieval",
+      "status": "FAIL",
+      "duration": 1,
+      "error": "fetch is not a function"
+    },
+    {
+      "name": "Notification System",
+      "status": "FAIL",
+      "duration": 0,
+      "error": "fetch is not a function"
+    },
+    {
+      "name": "DSLR Status Check",
+      "status": "FAIL",
+      "duration": 0,
+      "error": "fetch is not a function"
+    },
+    {
+      "name": "Error Handling",
+      "status": "FAIL",
+      "duration": 0,
+      "error": "fetch is not a function"
+    },
+    {
+      "name": "Performance Testing",
+      "status": "FAIL",
+      "duration": 1,
+      "error": "fetch is not a function"
+    }
+  ],
+  "timestamp": "2025-08-06T18:29:34.063Z",
+  "config": {
+    "BASE_URL": "http://localhost:3000",
+    "ADMIN_CREDENTIALS": {
+      "username": "admin",
+      "password": "your_admin_password"
+    },
+    "TEST_EVENT": {
+      "name": "API Test Event",
+      "date": "2024-12-31",
+      "accessCode": "APITEST123",
+      "description": "Event for API testing"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-// File: C:\Users\Administrator\nana-cursor-admin-dashboard-gallery-feature-enhancement-a647\hafi-portrait-stable\src\app\color-demo\page.tsx
+// File: /home/devbox/hafiportraits/src/app/color-demo/page.tsx
 import * as entry from '../../../../src/app/color-demo/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

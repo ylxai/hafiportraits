@@ -1,4 +1,4 @@
-// File: C:\Users\Administrator\nana-cursor-admin-dashboard-gallery-feature-enhancement-a647\hafi-portrait-stable\src\app\api\notifications\test\route.ts
+// File: /home/devbox/hafiportraits/src/app/api/notifications/test/route.ts
 import * as entry from '../../../../../../src/app/api/notifications/test/route.js'
 import type { NextRequest } from 'next/server.js'
 

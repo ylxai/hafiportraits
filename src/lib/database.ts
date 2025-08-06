@@ -164,11 +164,65 @@ class DatabaseService {
   }
 
   async deleteEvent(id: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('events')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
+    try {
+      // First, get all photos for this event to delete from storage
+      const { data: eventPhotos, error: photosError } = await this.supabase
+        .from('photos')
+        .select('*')
+        .eq('event_id', id);
+
+      if (photosError) {
+        console.error('Error fetching event photos for deletion:', photosError);
+        // Continue with deletion even if we can't fetch photos
+      }
+
+      // Delete photos from storage first
+      if (eventPhotos && eventPhotos.length > 0) {
+        for (const photo of eventPhotos) {
+          try {
+            await this.deletePhoto(photo.id);
+          } catch (photoDeleteError) {
+            console.error(`Error deleting photo ${photo.id}:`, photoDeleteError);
+            // Continue with other photos even if one fails
+          }
+        }
+      }
+
+      // Delete all messages for this event
+      const { error: messagesError } = await this.supabase
+        .from('messages')
+        .delete()
+        .eq('event_id', id);
+
+      if (messagesError) {
+        console.error('Error deleting event messages:', messagesError);
+        // Continue with event deletion even if message deletion fails
+      }
+
+      // Delete any remaining photos from database (in case storage deletion failed)
+      const { error: remainingPhotosError } = await this.supabase
+        .from('photos')
+        .delete()
+        .eq('event_id', id);
+
+      if (remainingPhotosError) {
+        console.error('Error deleting remaining event photos:', remainingPhotosError);
+        // Continue with event deletion
+      }
+
+      // Finally, delete the event itself
+      const { error: eventError } = await this.supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+
+      if (eventError) throw eventError;
+
+      console.log(`Event ${id} and all related data deleted successfully`);
+    } catch (error) {
+      console.error('Error in deleteEvent:', error);
+      throw error;
+    }
   }
 
   async verifyEventAccessCode(eventId: string, code: string): Promise<boolean> {

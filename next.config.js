@@ -8,10 +8,11 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Cloudflare Pages configuration
+  // Vercel deployment configuration
   images: {
-    unoptimized: true, // Required for Cloudflare Workers
+    // Vercel supports Next.js Image Optimization natively
     domains: ['localhost', 'api.qrserver.com', 'azspktldiblhrwebzmwq.supabase.co', 'hafiportrait.photography'],
+    formats: ['image/webp', 'image/avif'], // Modern formats for better performance
   },
   experimental: {
     serverComponentsExternalPackages: ['@neondatabase/serverless']
@@ -19,6 +20,9 @@ const nextConfig = {
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
   },
+  // Vercel-specific optimizations
+  poweredByHeader: false, // Remove X-Powered-By header for security
+  compress: true, // Enable gzip compression
 }
 
 module.exports = nextConfig 

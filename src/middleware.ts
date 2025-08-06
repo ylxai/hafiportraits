@@ -5,7 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { validateSession } from '@/lib/auth';
+// Edge Runtime compatible validation
+// import { validateSession } from '@/lib/auth';
 
 // Routes that require authentication
 const protectedRoutes = ['/admin'];
@@ -34,10 +35,17 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Validate session
+    // For Edge Runtime compatibility, we'll validate session via API call
     try {
-      const user = await validateSession(sessionId);
-      if (!user) {
+      // Make internal API call to validate session (Edge Runtime compatible)
+      const validateUrl = new URL('/api/auth/me', request.url);
+      const validateResponse = await fetch(validateUrl, {
+        headers: {
+          'Cookie': `admin_session=${sessionId}`,
+        },
+      });
+
+      if (!validateResponse.ok) {
         // Invalid session, redirect to login
         const response = NextResponse.redirect(new URL('/admin/login', request.url));
         response.cookies.set('admin_session', '', {
@@ -50,6 +58,15 @@ export async function middleware(request: NextRequest) {
         return response;
       }
 
+      const responseData = await validateResponse.json();
+      
+      // Check if response has the expected structure
+      if (!responseData.success || !responseData.user) {
+        throw new Error('Invalid response structure');
+      }
+      
+      const user = responseData.user;
+      
       // Add user info to headers for API routes
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set('x-user-id', user.id.toString());
@@ -71,8 +88,15 @@ export async function middleware(request: NextRequest) {
   // If accessing auth route while already authenticated
   if (isAuthRoute && sessionId) {
     try {
-      const user = await validateSession(sessionId);
-      if (user) {
+      // Make internal API call to validate session (Edge Runtime compatible)
+      const validateUrl = new URL('/api/auth/me', request.url);
+      const validateResponse = await fetch(validateUrl, {
+        headers: {
+          'Cookie': `admin_session=${sessionId}`,
+        },
+      });
+
+      if (validateResponse.ok) {
         // Already authenticated, redirect to admin dashboard
         return NextResponse.redirect(new URL('/admin', request.url));
       }
@@ -90,12 +114,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api/auth (authentication endpoints)
+     * - api (all API routes to avoid infinite loops)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
   ],
 };

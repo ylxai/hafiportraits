@@ -1,0 +1,47 @@
+{
+  "name": "birthday-party",
+  "description": "Kids Birthday Party - High Volume",
+  "createdAt": "2025-08-06T07:42:07.666Z",
+  "lastModified": "2025-08-06T07:42:07.666Z",
+  "config": {
+    "EVENT": {
+      "ID": "default-event",
+      "UPLOADER_NAME": "Official Photographer",
+      "ALBUM_NAME": "Official",
+      "AUTO_CREATE_EVENT": false
+    },
+    "CAMERA": {
+      "MODEL": "NIKON_D7100",
+      "WATCH_FOLDER": "/media/NIKON/DCIM/100NIKON",
+      "AUTO_DETECT": false,
+      "CONNECTION_CHECK_INTERVAL": 30000
+    },
+    "PERFORMANCE": {
+      "PROFILE": "PRODUCTION",
+      "stabilityThreshold": 1000,
+      "pollInterval": 500,
+      "retryDelay": 3000,
+      "maxRetries": 2,
+      "batchSize": 1,
+      "compressionQuality": 0.8
+    },
+    "NOTIFICATIONS": {
+      "ENABLED": true,
+      "LOCAL_LOGGING": true,
+      "LOG_FILE": "./dslr-notifications.log",
+      "MILESTONE_NOTIFICATIONS": true,
+      "MILESTONES": [
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000
+      ],
+      "CLIENT_NOTIFICATIONS": false,
+      "CLIENT_MILESTONE_THRESHOLD": 50
+    },
+    "lastUpdated": "2025-08-06T07:42:07.666Z"
+  }
+}

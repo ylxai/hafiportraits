@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, BellRing, X } from 'lucide-react';
+import { Bell, BellRing, X, Check, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+// import { useNotifications } from '@/hooks/use-notifications';
+// import { getDSLRNotificationIntegration } from '@/lib/dslr-notification-integration';
 
 interface Notification {
   id: string;
@@ -27,88 +30,113 @@ interface NotificationBellProps {
 
 export default function NotificationBell({ className = '' }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'upload_success',
-      title: '📸 Foto Baru Diupload',
-      message: '5 foto baru berhasil diupload ke album Official',
-      timestamp: new Date().toISOString(),
-      isRead: false,
-      priority: 'medium',
-      category: 'upload',
-      metadata: {
-        count: 5,
-        eventName: 'Wedding Sarah & John'
-      }
-    },
-    {
-      id: '2',
-      type: 'camera_disconnected',
-      title: '📷 Kamera Terputus',
-      message: 'Koneksi kamera DSLR terputus. Silakan cek kabel USB.',
-      timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
-      isRead: false,
-      priority: 'high',
-      category: 'system'
-    },
-    {
-      id: '3',
-      type: 'event_milestone',
-      title: '🎉 Milestone Event',
-      message: '100 foto telah diupload untuk event Wedding Sarah & John!',
-      timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-      isRead: true,
-      priority: 'medium',
-      category: 'event',
-      metadata: {
-        count: 100,
-        eventName: 'Wedding Sarah & John'
-      }
-    },
-    {
-      id: '4',
-      type: 'storage_warning',
-      title: '💾 Storage Hampir Penuh',
-      message: 'Storage tersisa 15%. Silakan backup foto lama.',
-      timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-      isRead: true,
-      priority: 'high',
-      category: 'system',
-      metadata: {
-        percentage: 15
-      }
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const hasUnread = unreadCount > 0;
 
-  // Simulate real-time notifications
+  // Initialize real notification system
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Randomly add new notifications (for demo)
-      if (Math.random() > 0.95) { // 5% chance every 2 seconds
-        const newNotification: Notification = {
-          id: Date.now().toString(),
-          type: 'upload_success',
-          title: '📸 Foto Baru Diupload',
-          message: `${Math.floor(Math.random() * 10) + 1} foto baru berhasil diupload`,
-          timestamp: new Date().toISOString(),
-          isRead: false,
-          priority: 'medium',
-          category: 'upload',
-          metadata: {
-            count: Math.floor(Math.random() * 10) + 1
-          }
-        };
-        
-        setNotifications(prev => [newNotification, ...prev]);
-      }
-    }, 2000);
+    // const dslrIntegration = getDSLRNotificationIntegration();
+    
+    // Listen for real upload events from admin dashboard
+    const handleAdminUpload = (event: CustomEvent) => {
+      const { type, data } = event.detail;
+      
+      const newNotification: Notification = {
+        id: Date.now().toString(),
+        type: type,
+        title: getNotificationTitle(type),
+        message: data.message || `${data.fileName || 'File'} berhasil diupload`,
+        timestamp: new Date().toISOString(),
+        isRead: false,
+        priority: getNotificationPriority(type),
+        category: getNotificationCategory(type),
+        metadata: {
+          fileName: data.fileName,
+          eventName: data.eventName,
+          count: data.count,
+          percentage: data.percentage
+        }
+      };
+      
+      setNotifications(prev => [newNotification, ...prev.slice(0, 19)]);
+    };
 
-    return () => clearInterval(interval);
+    // Listen for DSLR upload events
+    const handleDSLRNotification = (event: any) => {
+      const newNotification: Notification = {
+        id: Date.now().toString(),
+        type: event.type,
+        title: getNotificationTitle(event.type),
+        message: event.message || event.data?.message || 'New notification',
+        timestamp: new Date().toISOString(),
+        isRead: false,
+        priority: getNotificationPriority(event.type),
+        category: getNotificationCategory(event.type),
+        metadata: {
+          fileName: event.data?.fileName,
+          eventName: event.data?.eventName,
+          count: event.data?.count,
+          percentage: event.data?.percentage
+        }
+      };
+      
+      setNotifications(prev => [newNotification, ...prev.slice(0, 19)]);
+    };
+
+    // Listen for events
+    if (typeof window !== 'undefined') {
+      window.addEventListener('admin-upload-success', handleAdminUpload as EventListener);
+      window.addEventListener('admin-upload-failed', handleAdminUpload as EventListener);
+      window.addEventListener('dslr-notification', handleDSLRNotification);
+      
+      return () => {
+        window.removeEventListener('admin-upload-success', handleAdminUpload as EventListener);
+        window.removeEventListener('admin-upload-failed', handleAdminUpload as EventListener);
+        window.removeEventListener('dslr-notification', handleDSLRNotification);
+      };
+    }
   }, []);
+
+  const getNotificationTitle = (type: string): string => {
+    switch (type) {
+      case 'upload_success': return '📸 Foto Berhasil Diupload';
+      case 'upload_failed': return '❌ Upload Gagal';
+      case 'upload_start': return '📤 Memulai Upload';
+      case 'camera_connected': return '📷 Kamera Terhubung';
+      case 'camera_disconnected': return '📷 Kamera Terputus';
+      case 'storage_warning': return '⚠️ Storage Hampir Penuh';
+      case 'event_milestone': return '🎉 Milestone Tercapai';
+      default: return '📢 Notifikasi Baru';
+    }
+  };
+
+  const getNotificationPriority = (type: string): 'low' | 'medium' | 'high' | 'critical' => {
+    switch (type) {
+      case 'upload_failed': 
+      case 'camera_disconnected': 
+      case 'storage_warning': return 'high';
+      case 'upload_success': 
+      case 'event_milestone': return 'medium';
+      case 'upload_start': 
+      case 'camera_connected': return 'low';
+      default: return 'medium';
+    }
+  };
+
+  const getNotificationCategory = (type: string): 'upload' | 'system' | 'event' | 'user' => {
+    switch (type) {
+      case 'upload_success':
+      case 'upload_failed':
+      case 'upload_start': return 'upload';
+      case 'camera_connected':
+      case 'camera_disconnected':
+      case 'storage_warning': return 'system';
+      case 'event_milestone': return 'event';
+      default: return 'user';
+    }
+  };
 
   const handleMarkAsRead = (id: string) => {
     setNotifications(prev => 
@@ -130,98 +158,139 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
     setNotifications([]);
   };
 
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Baru';
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
+    return `${Math.floor(diffInMinutes / 1440)}d`;
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'upload_success': return '✅';
+      case 'upload_failed': return '❌';
+      case 'camera_disconnected': return '📷';
+      case 'storage_warning': return '⚠️';
+      case 'event_milestone': return '🎉';
+      case 'system': return '⚙️';
+      default: return '📢';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return 'border-l-red-500 bg-red-50';
+      case 'high': return 'border-l-orange-500 bg-orange-50';
+      case 'medium': return 'border-l-blue-500 bg-blue-50';
+      case 'low': return 'border-l-gray-500 bg-gray-50';
+      default: return 'border-l-gray-500 bg-gray-50';
+    }
+  };
+
   return (
     <div className={`relative ${className}`}>
+      {/* Bell Button - Mobile Optimized */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          relative p-2 rounded-lg transition-all duration-200 touch-feedback
+          relative p-3 rounded-full transition-all duration-200 
+          min-h-[48px] min-w-[48px] flex items-center justify-center
           ${hasUnread 
-            ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' 
-            : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+            ? 'bg-blue-100 text-blue-600 hover:bg-blue-200 active:bg-blue-300' 
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 active:bg-gray-300'
           }
-          ${isOpen ? 'bg-primary text-primary-foreground' : ''}
+          ${isOpen ? 'bg-blue-600 text-white shadow-lg' : ''}
+          touch-manipulation focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
         `}
         aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
       >
         {hasUnread ? (
-          <BellRing className="h-5 w-5" />
+          <BellRing className="h-6 w-6" />
         ) : (
-          <Bell className="h-5 w-5" />
+          <Bell className="h-6 w-6" />
         )}
         
         {/* Notification Badge */}
         {unreadCount > 0 && (
           <Badge 
             variant="destructive" 
-            className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs font-bold animate-pulse"
+            className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center p-0 text-xs font-bold min-w-[24px] rounded-full animate-pulse"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </Badge>
         )}
-        
-        {/* Pulse Animation for New Notifications */}
-        {hasUnread && (
-          <div className="absolute inset-0 rounded-lg bg-blue-400 animate-ping opacity-20" />
-        )}
       </button>
 
-      {/* Dropdown Notification Panel */}
+      {/* Mobile-First Notification Panel */}
       {isOpen && (
         <>
-          {/* Backdrop for mobile */}
+          {/* Mobile Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/20 z-40 lg:hidden"
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Notification Dropdown */}
-          <div className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-white rounded-lg shadow-xl border z-50 max-h-[80vh] flex flex-col">
+          {/* Notification Panel */}
+          <div className="
+            fixed top-16 right-4 left-4 z-50 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:left-auto
+            w-auto sm:w-screen sm:max-w-sm lg:max-w-md
+            bg-white rounded-lg shadow-xl border
+            max-h-[80vh] overflow-hidden
+          ">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b bg-gray-50 rounded-t-lg">
+            <div className="flex items-center justify-between p-4 border-b bg-gray-50">
               <div className="flex items-center gap-2">
-                <BellRing className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-gray-900">Notifications</h3>
+                <h3 className="font-semibold text-gray-900">Notifikasi</h3>
                 {unreadCount > 0 && (
-                  <Badge variant="destructive" className="text-xs">
-                    {unreadCount}
+                  <Badge variant="secondary" className="text-xs">
+                    {unreadCount} baru
                   </Badge>
                 )}
               </div>
-              
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-              >
-                <X className="h-4 w-4 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex items-center justify-between p-3 border-b bg-gray-50">
-              <button
-                onClick={handleMarkAllAsRead}
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
-                disabled={unreadCount === 0}
-              >
-                Mark all as read
-              </button>
-              
-              <button
-                onClick={handleClearAll}
-                className="text-sm text-red-600 hover:text-red-500 font-medium"
-              >
-                Clear all
-              </button>
+              <div className="flex items-center gap-2">
+                {notifications.length > 0 && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleMarkAllAsRead}
+                      className="text-xs h-8 px-2"
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Baca Semua
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearAll}
+                      className="text-xs h-8 px-2 text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Hapus
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsOpen(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Notifications List */}
-            <div className="flex-1 overflow-y-auto max-h-96">
+            <div className="max-h-96 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-center p-6">
-                  <Bell className="h-8 w-8 text-gray-400 mb-2" />
-                  <p className="text-gray-600 font-medium">No notifications</p>
-                  <p className="text-sm text-gray-500">All caught up!</p>
+                <div className="p-8 text-center text-gray-500">
+                  <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-sm">Tidak ada notifikasi</p>
                 </div>
               ) : (
                 <div className="divide-y">
@@ -229,92 +298,88 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
                     <div
                       key={notification.id}
                       className={`
-                        p-4 hover:bg-gray-50 transition-colors cursor-pointer
-                        ${!notification.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}
+                        p-4 border-l-4 transition-colors duration-200
+                        ${notification.isRead ? 'bg-white' : 'bg-blue-50/50'}
+                        ${getPriorityColor(notification.priority)}
+                        hover:bg-gray-50 cursor-pointer
                       `}
-                      onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
+                      onClick={() => handleMarkAsRead(notification.id)}
                     >
                       <div className="flex items-start gap-3">
-                        {/* Notification Icon */}
-                        <div className="text-lg flex-shrink-0 mt-0.5">
-                          {notification.type === 'upload_success' && '✅'}
-                          {notification.type === 'upload_failed' && '❌'}
-                          {notification.type === 'camera_disconnected' && '📷'}
-                          {notification.type === 'storage_warning' && '💾'}
-                          {notification.type === 'event_milestone' && '🎉'}
-                          {notification.type === 'system' && '⚙️'}
+                        {/* Icon */}
+                        <div className="flex-shrink-0 text-lg">
+                          {getNotificationIcon(notification.type)}
                         </div>
-
+                        
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <p className={`text-sm ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'}`}>
-                                {notification.title}
-                              </p>
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                {notification.message}
-                              </p>
-                            </div>
-                            
-                            <div className="flex items-center gap-1">
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs ${
-                                  notification.priority === 'high' ? 'bg-red-50 text-red-700 border-red-200' :
-                                  notification.priority === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                  'bg-gray-50 text-gray-700 border-gray-200'
-                                }`}
-                              >
-                                {notification.priority}
-                              </Badge>
-                              
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(notification.id);
-                                }}
-                                className="p-1 hover:bg-gray-200 rounded transition-colors"
-                              >
-                                <X className="h-3 w-3 text-gray-400" />
-                              </button>
+                            <h4 className={`
+                              text-sm font-medium truncate
+                              ${notification.isRead ? 'text-gray-700' : 'text-gray-900'}
+                            `}>
+                              {notification.title}
+                            </h4>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-xs text-gray-500">
+                                {formatTime(notification.timestamp)}
+                              </span>
+                              {!notification.isRead && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                              )}
                             </div>
                           </div>
-
+                          
+                          <p className={`
+                            text-sm mt-1 overflow-hidden
+                            ${notification.isRead ? 'text-gray-600' : 'text-gray-800'}
+                          `}
+                          style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical'
+                          }}>
+                            {notification.message}
+                          </p>
+                          
                           {/* Metadata */}
                           {notification.metadata && (
-                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                               {notification.metadata.eventName && (
-                                <span>🎉 {notification.metadata.eventName}</span>
+                                <span>📅 {notification.metadata.eventName}</span>
                               )}
                               {notification.metadata.count && (
-                                <span>📊 {notification.metadata.count} items</span>
+                                <span>📊 {notification.metadata.count} foto</span>
+                              )}
+                              {notification.metadata.percentage && (
+                                <span>💾 {notification.metadata.percentage}% terpakai</span>
                               )}
                             </div>
                           )}
-
-                          {/* Timestamp */}
-                          <p className="text-xs text-gray-500 mt-2">
-                            {(() => {
-                              const now = new Date();
-                              const time = new Date(notification.timestamp);
-                              const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60));
-                              
-                              if (diffInMinutes < 1) return 'Baru saja';
-                              if (diffInMinutes < 60) return `${diffInMinutes} menit lalu`;
-                              if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} jam lalu`;
-                              return `${Math.floor(diffInMinutes / 1440)} hari lalu`;
-                            })()}
-                          </p>
+                        </div>
+                        
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(notification.id);
+                            }}
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </div>
                       </div>
                     </div>
                   ))}
                   
                   {notifications.length > 10 && (
-                    <div className="p-3 text-center border-t bg-gray-50">
+                    <div className="p-4 text-center border-t bg-gray-50">
                       <button className="text-sm text-blue-600 hover:text-blue-500 font-medium">
-                        View all {notifications.length} notifications
+                        Lihat semua {notifications.length} notifikasi
                       </button>
                     </div>
                   )}

@@ -1,5 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { database } from '@/lib/database';
+import { database, MessageReactions } from '@/lib/database';
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { messageId: string } }
+) {
+  try {
+    const messageId = params.messageId;
+    
+    // Get current message to increment hearts
+    const message = await database.getMessageById(messageId);
+    if (!message) {
+      return NextResponse.json(
+        { message: "Message not found" },
+        { status: 404 }
+      );
+    }
+
+    const newHearts = (message.hearts || 0) + 1;
+    await database.updateMessageHearts(messageId, newHearts);
+
+    return NextResponse.json({ 
+      success: true, 
+      hearts: newHearts,
+      message: "Heart added successfully" 
+    });
+  } catch (error: any) {
+    console.error('Add heart error:', error);
+    return NextResponse.json(
+      { message: "Failed to add heart", error: error.message },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PATCH(
   request: NextRequest,

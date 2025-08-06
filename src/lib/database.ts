@@ -50,6 +50,14 @@ export type CompressionStats = {
   ratio: string;
 };
 
+export type MessageReactions = {
+  love: number;
+  laugh: number;
+  wow: number;
+  sad: number;
+  angry: number;
+};
+
 export type Message = {
   id: string;
   event_id: string;
@@ -57,6 +65,7 @@ export type Message = {
   content: string;
   sent_at: string;
   hearts: number;
+  reactions?: MessageReactions;
   guest_name?: string; // Add guest_name as optional for compatibility
 };
 
@@ -538,6 +547,60 @@ class DatabaseService {
 
   async heartMessage(messageId: string): Promise<void> {
     const { data, error } = await this.supabase.rpc('increment_hearts', { message_id: messageId }); // Panggil fungsi RPC
+    if (error) throw error;
+  }
+
+  async getMessageById(messageId: string): Promise<Message | null> {
+    const { data, error } = await this.supabase
+      .from('messages')
+      .select('*')
+      .eq('id', messageId)
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async updateMessageHearts(messageId: string, hearts: number): Promise<void> {
+    const { error } = await this.supabase
+      .from('messages')
+      .update({ hearts })
+      .eq('id', messageId);
+    if (error) throw error;
+  }
+
+  async addMessageReaction(messageId: string, reactionType: keyof MessageReactions): Promise<void> {
+    // Get current message
+    const message = await this.getMessageById(messageId);
+    if (!message) {
+      throw new Error('Message not found');
+    }
+
+    // Get current reactions or initialize
+    const currentReactions: MessageReactions = message.reactions || {
+      love: 0,
+      laugh: 0,
+      wow: 0,
+      sad: 0,
+      angry: 0
+    };
+
+    // Increment the specific reaction
+    currentReactions[reactionType] = (currentReactions[reactionType] || 0) + 1;
+
+    // Update in database
+    const { error } = await this.supabase
+      .from('messages')
+      .update({ reactions: currentReactions })
+      .eq('id', messageId);
+    
+    if (error) throw error;
+  }
+
+  async updateMessageReactions(messageId: string, reactions: MessageReactions): Promise<void> {
+    const { error } = await this.supabase
+      .from('messages')
+      .update({ reactions })
+      .eq('id', messageId);
     if (error) throw error;
   }
 

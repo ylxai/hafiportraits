@@ -1,0 +1,47 @@
+{
+  "name": "wedding-sarah-john",
+  "description": "Sarah & John Wedding - December 2024",
+  "createdAt": "2025-08-06T07:42:07.662Z",
+  "lastModified": "2025-08-06T07:42:07.693Z",
+  "config": {
+    "EVENT": {
+      "ID": "wedding-sarah-john-2024",
+      "UPLOADER_NAME": "Wedding Photographer",
+      "ALBUM_NAME": "Sarah & John Wedding",
+      "AUTO_CREATE_EVENT": false
+    },
+    "CAMERA": {
+      "MODEL": "NIKON_D7100",
+      "WATCH_FOLDER": "/media/NIKON/DCIM/100NIKON",
+      "AUTO_DETECT": false,
+      "CONNECTION_CHECK_INTERVAL": 30000
+    },
+    "PERFORMANCE": {
+      "PROFILE": "HIGH_VOLUME",
+      "stabilityThreshold": 1000,
+      "pollInterval": 500,
+      "retryDelay": 3000,
+      "maxRetries": 2,
+      "batchSize": 1,
+      "compressionQuality": 0.8
+    },
+    "NOTIFICATIONS": {
+      "ENABLED": true,
+      "LOCAL_LOGGING": true,
+      "LOG_FILE": "./dslr-notifications.log",
+      "MILESTONE_NOTIFICATIONS": true,
+      "MILESTONES": [
+        10,
+        25,
+        50,
+        100,
+        250,
+        500,
+        1000
+      ],
+      "CLIENT_NOTIFICATIONS": false,
+      "CLIENT_MILESTONE_THRESHOLD": 50
+    },
+    "lastUpdated": "2025-08-06T07:42:07.691Z"
+  }
+}

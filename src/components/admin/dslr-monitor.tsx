@@ -20,7 +20,9 @@ import {
   XCircle,
   Clock,
   FolderOpen,
-  Image
+  Image,
+  Save,
+  RotateCcw
 } from 'lucide-react';
 
 interface DSLRStats {
@@ -45,6 +47,17 @@ interface RecentUpload {
   photoUrl?: string;
 }
 
+interface DSLRSettings {
+  autoUpload: boolean;
+  watchFolder: string;
+  cameraModel: string;
+  autoDetect: boolean;
+  backupEnabled: boolean;
+  notificationsEnabled: boolean;
+  watermarkEnabled: boolean;
+  connectionCheck: number;
+}
+
 export default function DSLRMonitor() {
   const [stats, setStats] = useState<DSLRStats>({
     isConnected: false,
@@ -67,17 +80,119 @@ export default function DSLRMonitor() {
     watchFolder: 'C:/DCIM/100NIKON'
   });
 
-  // Simulate real-time updates (replace with actual WebSocket/API calls)
+  const [dslrSettings, setDslrSettings] = useState<DSLRSettings>({
+    autoUpload: true,
+    watchFolder: 'C:/DCIM/100NIKON',
+    cameraModel: 'NIKON_D7100',
+    autoDetect: true,
+    backupEnabled: true,
+    notificationsEnabled: true,
+    watermarkEnabled: false,
+    connectionCheck: 30000
+  });
+
+  const [hasUnsavedSettings, setHasUnsavedSettings] = useState(false);
+
+  const [availableEvents, setAvailableEvents] = useState([]);
+
+  // DSLR Settings handlers
+  const handleDslrSettingsChange = (key: keyof DSLRSettings, value: any) => {
+    setDslrSettings(prev => ({ ...prev, [key]: value }));
+    setHasUnsavedSettings(true);
+  };
+
+  const handleSaveDslrSettings = async () => {
+    try {
+      // Save to API or localStorage
+      localStorage.setItem('dslr-settings', JSON.stringify(dslrSettings));
+      setHasUnsavedSettings(false);
+      // Show success notification
+      console.log('DSLR settings saved successfully');
+    } catch (error) {
+      console.error('Failed to save DSLR settings:', error);
+    }
+  };
+
+  const handleResetDslrSettings = () => {
+    if (confirm('Reset all DSLR settings to default?')) {
+      const defaultSettings: DSLRSettings = {
+        autoUpload: true,
+        watchFolder: 'C:/DCIM/100NIKON',
+        cameraModel: 'NIKON_D7100',
+        autoDetect: true,
+        backupEnabled: true,
+        notificationsEnabled: true,
+        watermarkEnabled: false,
+        connectionCheck: 30000
+      };
+      setDslrSettings(defaultSettings);
+      setHasUnsavedSettings(false);
+    }
+  };
+
+  // Fetch available events for dropdown
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Simulate stats update
-      setStats(prev => ({
-        ...prev,
-        isConnected: Math.random() > 0.1, // 90% uptime
-        totalUploaded: prev.totalUploaded + (Math.random() > 0.8 ? 1 : 0),
-        uploadSpeed: Math.random() * 5 + 1 // 1-6 MB/s
-      }));
-    }, 2000);
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch('/api/admin/events');
+        if (response.ok) {
+          const events = await response.json();
+          setAvailableEvents(events);
+        }
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  // Fetch real DSLR status from API
+  useEffect(() => {
+    const fetchDSLRStatus = async () => {
+      try {
+        const response = await fetch('/api/dslr/status');
+        if (response.ok) {
+          const data = await response.json();
+          setStats(prev => ({
+            ...prev,
+            isConnected: data.isConnected || false,
+            isProcessing: data.isProcessing || false,
+            totalUploaded: data.totalUploaded || 0,
+            failedUploads: data.failedUploads || 0,
+            lastUpload: data.lastUpload || null,
+            watchFolder: data.watchFolder || prev.watchFolder,
+            eventId: data.eventId || prev.eventId,
+            uploaderName: data.uploaderName || prev.uploaderName,
+            queueSize: data.queueSize || 0,
+            uploadSpeed: data.uploadSpeed || 0
+          }));
+          
+          // Update settings with current values
+          setSettings(prev => ({
+            ...prev,
+            eventId: data.eventId || prev.eventId,
+            uploaderName: data.uploaderName || prev.uploaderName,
+            watchFolder: data.watchFolder || prev.watchFolder
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch DSLR status:', error);
+        // Set disconnected state on error
+        setStats(prev => ({
+          ...prev,
+          isConnected: false,
+          isProcessing: false,
+          uploadSpeed: 0
+        }));
+      }
+    };
+
+    // Initial fetch
+    fetchDSLRStatus();
+
+    // Poll every 5 seconds for real-time updates
+    const interval = setInterval(fetchDSLRStatus, 5000);
 
     return () => clearInterval(interval);
   }, []);
@@ -86,13 +201,50 @@ export default function DSLRMonitor() {
     setStats(prev => ({ ...prev, isProcessing: !prev.isProcessing }));
   };
 
-  const handleSettingsUpdate = () => {
-    setStats(prev => ({
-      ...prev,
-      eventId: settings.eventId,
-      uploaderName: settings.uploaderName,
-      watchFolder: settings.watchFolder
-    }));
+  const handleSettingsUpdate = async () => {
+    try {
+      // Update local state
+      setStats(prev => ({
+        ...prev,
+        eventId: settings.eventId,
+        uploaderName: settings.uploaderName,
+        watchFolder: settings.watchFolder
+      }));
+
+      // Send settings to DSLR service via API
+      const response = await fetch('/api/dslr/status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update_settings',
+          settings: {
+            eventId: settings.eventId,
+            uploaderName: settings.uploaderName,
+            watchFolder: settings.watchFolder
+          }
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ DSLR settings updated successfully');
+        
+        // Show success notification
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('admin-notification', {
+            detail: {
+              type: 'success',
+              message: `DSLR settings updated - Event ID: ${settings.eventId}`
+            }
+          }));
+        }
+      } else {
+        console.error('❌ Failed to update DSLR settings');
+      }
+    } catch (error) {
+      console.error('❌ Error updating DSLR settings:', error);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -238,16 +390,27 @@ export default function DSLRMonitor() {
             <Separator />
 
             <div className="mobile-form-group">
-              <label htmlFor="event-id" className="mobile-label">Active Event ID</label>
-              <input
+              <label htmlFor="event-id" className="mobile-label">Active Event</label>
+              <select
                 id="event-id"
                 className="mobile-input"
                 value={settings.eventId}
                 onChange={(e) => 
                   setSettings(prev => ({ ...prev, eventId: e.target.value }))
                 }
-                placeholder="Enter event ID"
-              />
+              >
+                <option value="">Select Event</option>
+                {availableEvents.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name} - {new Date(event.date).toLocaleDateString()}
+                  </option>
+                ))}
+              </select>
+              {settings.eventId && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Selected: {availableEvents.find(e => e.id === settings.eventId)?.name || settings.eventId}
+                </div>
+              )}
             </div>
 
             <div className="mobile-form-group">
@@ -377,6 +540,176 @@ export default function DSLRMonitor() {
               </div>
               <p className="text-sm font-medium">Storage</p>
               <p className="text-xs text-muted-foreground">Available</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* DSLR Configuration */}
+      <div className="mobile-card">
+        <div className="mobile-card-header">
+          <div className="flex items-center justify-between">
+            <h3 className="mobile-card-title flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              DSLR Configuration
+            </h3>
+            {hasUnsavedSettings && (
+              <Badge variant="secondary" className="text-xs">
+                Unsaved Changes
+              </Badge>
+            )}
+          </div>
+        </div>
+        <div className="mobile-card-content space-y-6">
+          {/* Auto Upload Toggle */}
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+            <div>
+              <p className="font-medium">Auto Upload</p>
+              <p className="text-sm text-muted-foreground">
+                Automatically upload photos from DSLR to system
+              </p>
+            </div>
+            <Switch
+              checked={dslrSettings.autoUpload}
+              onCheckedChange={(checked) => handleDslrSettingsChange('autoUpload', checked)}
+            />
+          </div>
+
+          {/* Camera Settings - Only show when auto upload is enabled */}
+          {dslrSettings.autoUpload && (
+            <div className="space-y-4 pl-4 border-l-4 border-blue-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="camera-model">Camera Model</Label>
+                  <select
+                    id="camera-model"
+                    value={dslrSettings.cameraModel}
+                    onChange={(e) => handleDslrSettingsChange('cameraModel', e.target.value)}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="NIKON_D7100">📷 Nikon D7100</option>
+                    <option value="NIKON_D850">📷 Nikon D850</option>
+                    <option value="CANON_EOS_5D">📷 Canon EOS 5D</option>
+                    <option value="CANON_EOS_R5">📷 Canon EOS R5</option>
+                    <option value="SONY_A7III">📷 Sony A7 III</option>
+                    <option value="SONY_A7R4">📷 Sony A7R IV</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="watch-folder">Watch Folder</Label>
+                  <Input
+                    id="watch-folder"
+                    type="text"
+                    value={dslrSettings.watchFolder}
+                    onChange={(e) => handleDslrSettingsChange('watchFolder', e.target.value)}
+                    placeholder="C:/DCIM/100NIKON"
+                    className="focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Advanced Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Auto Detect Camera</p>
+                    <p className="text-xs text-muted-foreground">
+                      Automatically detect camera folder
+                    </p>
+                  </div>
+                  <Switch
+                    checked={dslrSettings.autoDetect}
+                    onCheckedChange={(checked) => handleDslrSettingsChange('autoDetect', checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Local Backup</p>
+                    <p className="text-xs text-muted-foreground">
+                      Backup photos to local storage
+                    </p>
+                  </div>
+                  <Switch
+                    checked={dslrSettings.backupEnabled}
+                    onCheckedChange={(checked) => handleDslrSettingsChange('backupEnabled', checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Notifications</p>
+                    <p className="text-xs text-muted-foreground">
+                      Upload and camera status notifications
+                    </p>
+                  </div>
+                  <Switch
+                    checked={dslrSettings.notificationsEnabled}
+                    onCheckedChange={(checked) => handleDslrSettingsChange('notificationsEnabled', checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Watermark</p>
+                    <p className="text-xs text-muted-foreground">
+                      Automatic watermark for DSLR photos
+                    </p>
+                  </div>
+                  <Switch
+                    checked={dslrSettings.watermarkEnabled}
+                    onCheckedChange={(checked) => handleDslrSettingsChange('watermarkEnabled', checked)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+            <Button 
+              onClick={handleSaveDslrSettings}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={!hasUnsavedSettings}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save Settings
+              {hasUnsavedSettings && <span className="ml-2 w-2 h-2 bg-red-500 rounded-full"></span>}
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={handleResetDslrSettings}
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset to Default
+            </Button>
+          </div>
+
+          {/* Status Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">📷 Current Configuration:</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center">
+                <div className={`font-medium ${dslrSettings.autoUpload ? 'text-green-600' : 'text-gray-600'}`}>
+                  {dslrSettings.autoUpload ? '✅ Enabled' : '❌ Disabled'}
+                </div>
+                <div className="text-blue-800">Auto Upload</div>
+              </div>
+              <div className="text-center">
+                <div className={`font-medium ${dslrSettings.backupEnabled ? 'text-green-600' : 'text-gray-600'}`}>
+                  {dslrSettings.backupEnabled ? '💾 Active' : '❌ Disabled'}
+                </div>
+                <div className="text-blue-800">Local Backup</div>
+              </div>
+              <div className="text-center">
+                <div className={`font-medium ${dslrSettings.notificationsEnabled ? 'text-purple-600' : 'text-gray-600'}`}>
+                  {dslrSettings.notificationsEnabled ? '🔔 Enabled' : '🔕 Disabled'}
+                </div>
+                <div className="text-blue-800">Notifications</div>
+              </div>
+              <div className="text-center">
+                <div className={`font-medium ${dslrSettings.watermarkEnabled ? 'text-blue-600' : 'text-gray-600'}`}>
+                  {dslrSettings.watermarkEnabled ? '🏷️ Active' : '❌ Disabled'}
+                </div>
+                <div className="text-blue-800">Watermark</div>
+              </div>
             </div>
           </div>
         </div>

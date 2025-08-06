@@ -1,28 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
-// Simulasi status DSLR service
-// Dalam implementasi nyata, ini akan connect ke actual service
-let dslrStatus = {
-  isConnected: true,
-  isProcessing: true,
-  totalUploaded: 45,
-  failedUploads: 2,
-  lastUpload: new Date().toISOString(),
+// Path to DSLR runtime status file
+const DSLR_STATUS_FILE = path.join(process.cwd(), 'dslr-status.json');
+
+// Default status when service is not running
+const DEFAULT_STATUS = {
+  isConnected: false,
+  isProcessing: false,
+  totalUploaded: 0,
+  failedUploads: 0,
+  lastUpload: null,
   watchFolder: 'C:/DCIM/100NIKON',
-  eventId: 'event-123',
+  eventId: '',
   uploaderName: 'Official Photographer',
   queueSize: 0,
-  uploadSpeed: 3.2
+  uploadSpeed: 0,
+  serviceRunning: false,
+  lastHeartbeat: null
 };
+
+function readDSLRStatus() {
+  // Try to read from file first (for local service updates)
+  try {
+    if (fs.existsSync(DSLR_STATUS_FILE)) {
+      const data = fs.readFileSync(DSLR_STATUS_FILE, 'utf8');
+      const status = JSON.parse(data);
+      
+      // Check if heartbeat is recent (within last 30 seconds)
+      const now = new Date().getTime();
+      const lastHeartbeat = status.lastHeartbeat ? new Date(status.lastHeartbeat).getTime() : 0;
+      const isServiceRunning = (now - lastHeartbeat) < 30000; // 30 seconds
+      
+      // Merge file status with memory status (memory takes precedence for settings)
+      return {
+        ...status,
+        ...memoryStatus,
+        serviceRunning: isServiceRunning,
+        isConnected: isServiceRunning && status.isConnected,
+        totalUploaded: status.totalUploaded || memoryStatus.totalUploaded,
+        failedUploads: status.failedUploads || memoryStatus.failedUploads,
+        lastUpload: status.lastUpload || memoryStatus.lastUpload
+      };
+    }
+  } catch (error) {
+    console.error('Error reading DSLR status file:', error);
+  }
+  
+  // Fallback to memory status
+  return { ...DEFAULT_STATUS, ...memoryStatus };
+}
 
 export async function GET() {
   try {
-    // Dalam implementasi nyata, query actual DSLR service status
-    // Bisa via HTTP endpoint, file system, atau database
+    const dslrStatus = readDSLRStatus();
     
     return NextResponse.json({
       success: true,
-      data: dslrStatus
+      ...dslrStatus
     });
   } catch (error) {
     console.error('Error getting DSLR status:', error);
@@ -33,6 +69,22 @@ export async function GET() {
   }
 }
 
+// In-memory status storage (since Vercel is read-only)
+let memoryStatus = {
+  isConnected: false,
+  isProcessing: false,
+  totalUploaded: 0,
+  failedUploads: 0,
+  lastUpload: null,
+  watchFolder: 'C:/DCIM/100NIKON',
+  eventId: '',
+  uploaderName: 'Official Photographer',
+  queueSize: 0,
+  uploadSpeed: 0,
+  serviceRunning: false,
+  lastHeartbeat: null
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -40,14 +92,21 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'pause':
-        dslrStatus.isProcessing = false;
+        memoryStatus.isProcessing = false;
         break;
       case 'resume':
-        dslrStatus.isProcessing = true;
+        memoryStatus.isProcessing = true;
         break;
       case 'update_settings':
         if (settings) {
-          dslrStatus = { ...dslrStatus, ...settings };
+          // Update memory status with new settings
+          memoryStatus = { 
+            ...memoryStatus, 
+            ...settings,
+            lastHeartbeat: new Date().toISOString()
+          };
+          
+          console.log('✅ DSLR settings updated in memory:', settings);
         }
         break;
       default:
@@ -59,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: dslrStatus
+      ...memoryStatus
     });
   } catch (error) {
     console.error('Error updating DSLR status:', error);
@@ -69,3 +128,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Note: File writing removed due to Vercel read-only filesystem
+// Local service will poll API for settings updates instead

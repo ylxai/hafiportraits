@@ -71,6 +71,9 @@ class DSLRAutoUploader {
     // Monitor camera connection
     this.startCameraMonitoring();
     
+    // Start heartbeat for status updates
+    this.startHeartbeat();
+    
     console.log(`📁 Watching folder: ${CONFIG.CAMERA.WATCH_FOLDER}`);
     console.log(`📸 Event ID: ${CONFIG.EVENT.ID}`);
     console.log(`👨‍💼 Photographer: ${CONFIG.EVENT.UPLOADER_NAME}`);
@@ -82,6 +85,9 @@ class DSLRAutoUploader {
     if (CONFIG.WATERMARK.ENABLED) {
       await this.watermarkProcessor.initialize();
     }
+    
+    // Initial status update
+    await this.updateDSLRStatus();
   }
 
   async createBackupFolders() {
@@ -302,15 +308,38 @@ class DSLRAutoUploader {
   // Update DSLR status
   async updateDSLRStatus() {
     try {
-      await this.notificationIntegration.updateDSLRStatus({
+      const status = {
+        isConnected: true,
+        isProcessing: this.isProcessing,
         totalUploaded: this.uploadStats.totalUploaded,
         failedUploads: this.uploadStats.totalFailed,
-        lastUpload: new Date().toISOString(),
+        lastUpload: this.uploadStats.totalUploaded > 0 ? new Date().toISOString() : null,
+        watchFolder: CONFIG.CAMERA.WATCH_FOLDER,
+        eventId: CONFIG.EVENT.ID,
+        uploaderName: CONFIG.EVENT.UPLOADER_NAME,
         queueSize: this.processedFiles.size,
-        isProcessing: this.isProcessing
-      });
+        uploadSpeed: 0, // Will be calculated based on recent uploads
+        serviceRunning: true,
+        lastHeartbeat: new Date().toISOString()
+      };
+
+      // Write status to runtime file
+      await this.writeRuntimeStatus(status);
+      
+      // Also update notification integration
+      await this.notificationIntegration.updateDSLRStatus(status);
     } catch (error) {
       console.error('❌ Failed to update DSLR status:', error);
+    }
+  }
+
+  // Write runtime status to file
+  async writeRuntimeStatus(status) {
+    try {
+      const runtimeFile = path.join(process.cwd(), 'dslr-status.json');
+      await fs.writeFile(runtimeFile, JSON.stringify(status, null, 2));
+    } catch (error) {
+      console.error('❌ Failed to write runtime status:', error);
     }
   }
 
@@ -381,6 +410,13 @@ class DSLRAutoUploader {
     setInterval(() => {
       this.checkCameraConnection();
     }, 30000); // Check every 30 seconds
+  }
+
+  // Start heartbeat for status updates
+  startHeartbeat() {
+    setInterval(() => {
+      this.updateDSLRStatus();
+    }, 10000); // Update status every 10 seconds
   }
 
   async checkCameraConnection() {

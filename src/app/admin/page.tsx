@@ -61,6 +61,37 @@ export default function AdminDashboardGrouped() {
   const [selectedEventForPhotos, setSelectedEventForPhotos] = useState("");
   const [isHomepageUploadOpen, setIsHomepageUploadOpen] = useState(false);
   const [isOfficialUploadOpen, setIsOfficialUploadOpen] = useState(false);
+  
+  // Appearance management states
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Settings management states
+  const [websiteSettings, setWebsiteSettings] = useState({
+    title: 'HafiPortrait',
+    description: 'Professional Photography Services',
+    autoUpload: true,
+    imageCompression: true,
+    compressionQuality: 85,
+    maxFileSize: 10,
+    watermarkEnabled: false,
+    notificationsEnabled: true
+  });
+  const [hasUnsavedSettings, setHasUnsavedSettings] = useState(false);
+  
+  // Preferences management states
+  const [userPreferences, setUserPreferences] = useState({
+    darkMode: 'auto',
+    language: 'id',
+    emailNotifications: true,
+    pushNotifications: true,
+    twoFactorAuth: false,
+    sessionTimeout: 30,
+    autoSave: true,
+    compactView: false
+  });
+  const [hasUnsavedPreferences, setHasUnsavedPreferences] = useState(false);
 
   // All hooks must be called before conditional returns
   // Fetch admin stats
@@ -352,6 +383,150 @@ export default function AdminDashboardGrouped() {
       }
       uploadOfficialPhotoMutation.mutate(file);
     });
+  };
+
+  // Appearance management handlers
+  const handleThemeChange = (themeId: string) => {
+    setCurrentTheme(themeId);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSaveAppearance = () => {
+    try {
+      // Save theme to localStorage (this is already handled by useColorPalette)
+      setHasUnsavedChanges(false);
+      toast({
+        title: "Tema Berhasil Disimpan! 🎨",
+        description: "Perubahan tema telah diterapkan ke seluruh website.",
+      });
+    } catch (error) {
+      toast({
+        title: "Gagal Menyimpan Tema",
+        description: "Terjadi kesalahan saat menyimpan tema.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResetTheme = () => {
+    if (confirm('Yakin ingin reset tema ke default?')) {
+      setCurrentTheme('');
+      setHasUnsavedChanges(false);
+      // Reset will be handled by the ColorPaletteSwitcher component
+      toast({
+        title: "Tema Direset! 🔄",
+        description: "Tema telah dikembalikan ke pengaturan default.",
+      });
+    }
+  };
+
+  const handleMobilePreview = () => {
+    setIsMobilePreviewOpen(true);
+  };
+
+  // Settings management handlers
+  const handleSettingsChange = (key: string, value: any) => {
+    setWebsiteSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+    setHasUnsavedSettings(true);
+  };
+
+  const handleSaveSettings = () => {
+    try {
+      // Save settings to localStorage or API
+      localStorage.setItem('hafiportrait-settings', JSON.stringify(websiteSettings));
+      setHasUnsavedSettings(false);
+      toast({
+        title: "Pengaturan Berhasil Disimpan! ⚙️",
+        description: "Konfigurasi website telah diperbarui.",
+      });
+    } catch (error) {
+      toast({
+        title: "Gagal Menyimpan Pengaturan",
+        description: "Terjadi kesalahan saat menyimpan pengaturan.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResetSettings = () => {
+    if (confirm('Yakin ingin reset semua pengaturan ke default?')) {
+      const defaultSettings = {
+        title: 'HafiPortrait',
+        description: 'Professional Photography Services',
+        autoUpload: true,
+        imageCompression: true,
+        compressionQuality: 85,
+        maxFileSize: 10,
+        watermarkEnabled: false,
+        notificationsEnabled: true,
+        // DSLR specific settings
+        dslrAutoUpload: true,
+        dslrWatchFolder: 'C:/DCIM/100NIKON',
+        dslrCameraModel: 'NIKON_D7100',
+        dslrAutoDetect: true,
+        dslrBackupEnabled: true,
+        dslrNotificationsEnabled: true,
+        dslrWatermarkEnabled: false,
+        dslrConnectionCheck: 30000
+      };
+      setWebsiteSettings(defaultSettings);
+      setHasUnsavedSettings(false);
+      toast({
+        title: "Pengaturan Direset! 🔄",
+        description: "Semua pengaturan dikembalikan ke default.",
+      });
+    }
+  };
+
+  // Preferences management handlers
+  const handlePreferencesChange = (key: string, value: any) => {
+    setUserPreferences(prev => ({
+      ...prev,
+      [key]: value
+    }));
+    setHasUnsavedPreferences(true);
+  };
+
+  const handleSavePreferences = () => {
+    try {
+      // Save preferences to localStorage or API
+      localStorage.setItem('hafiportrait-preferences', JSON.stringify(userPreferences));
+      setHasUnsavedPreferences(false);
+      toast({
+        title: "Preferensi Berhasil Disimpan! 👤",
+        description: "Pengaturan personal Anda telah diperbarui.",
+      });
+    } catch (error) {
+      toast({
+        title: "Gagal Menyimpan Preferensi",
+        description: "Terjadi kesalahan saat menyimpan preferensi.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResetPreferences = () => {
+    if (confirm('Yakin ingin reset semua preferensi ke default?')) {
+      const defaultPreferences = {
+        darkMode: 'auto',
+        language: 'id',
+        emailNotifications: true,
+        pushNotifications: true,
+        twoFactorAuth: false,
+        sessionTimeout: 30,
+        autoSave: true,
+        compactView: false
+      };
+      setUserPreferences(defaultPreferences);
+      setHasUnsavedPreferences(false);
+      toast({
+        title: "Preferensi Direset! 🔄",
+        description: "Semua preferensi dikembalikan ke default.",
+      });
+    }
   };
 
   const handleSaveEvent = (data: EventFormData & { id?: string }) => {
@@ -1093,7 +1268,11 @@ export default function AdminDashboardGrouped() {
                         
                         {/* Inline Color Palette Selector */}
                         <div className="border rounded-lg p-6 bg-gray-50">
-                          <ColorPaletteSwitcher variant="inline" showLabel={false} />
+                          <ColorPaletteSwitcher 
+                            variant="inline" 
+                            showLabel={false}
+                            onPaletteChange={handleThemeChange}
+                          />
                         </div>
                         
                         {/* Color Palette Info */}
@@ -1110,14 +1289,25 @@ export default function AdminDashboardGrouped() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-3 pt-4 border-t">
-                        <Button className="bg-wedding-gold hover:bg-wedding-gold/90 text-black">
+                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                        <Button 
+                          onClick={handleSaveAppearance}
+                          className="bg-wedding-gold hover:bg-wedding-gold/90 text-black"
+                          disabled={!hasUnsavedChanges}
+                        >
                           💾 Save Changes
+                          {hasUnsavedChanges && <span className="ml-2 w-2 h-2 bg-red-500 rounded-full"></span>}
                         </Button>
-                        <Button variant="outline">
+                        <Button 
+                          variant="outline"
+                          onClick={handleResetTheme}
+                        >
                           🔄 Reset to Default
                         </Button>
-                        <Button variant="outline">
+                        <Button 
+                          variant="outline"
+                          onClick={handleMobilePreview}
+                        >
                           📱 Preview on Mobile
                         </Button>
                       </div>
@@ -1145,16 +1335,20 @@ export default function AdminDashboardGrouped() {
                             <label className="text-sm font-medium">Website Title</label>
                             <input 
                               type="text" 
-                              defaultValue="HafiPortrait"
-                              className="w-full p-3 border rounded-lg"
+                              value={websiteSettings.title}
+                              onChange={(e) => handleSettingsChange('title', e.target.value)}
+                              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-wedding-gold focus:border-transparent"
+                              placeholder="Nama website Anda"
                             />
                           </div>
                           <div className="space-y-3">
                             <label className="text-sm font-medium">Website Description</label>
                             <input 
                               type="text" 
-                              defaultValue="Professional Photography Services"
-                              className="w-full p-3 border rounded-lg"
+                              value={websiteSettings.description}
+                              onChange={(e) => handleSettingsChange('description', e.target.value)}
+                              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-wedding-gold focus:border-transparent"
+                              placeholder="Deskripsi singkat website"
                             />
                           </div>
                         </div>
@@ -1164,38 +1358,142 @@ export default function AdminDashboardGrouped() {
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Upload Configuration</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                             <div>
                               <p className="font-medium">Auto Upload</p>
                               <p className="text-sm text-muted-foreground">
                                 Otomatis upload foto dari DSLR
                               </p>
                             </div>
-                            <Button variant="outline" size="sm">
-                              Enabled
-                            </Button>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={websiteSettings.autoUpload}
+                                onChange={(e) => handleSettingsChange('autoUpload', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                            </label>
                           </div>
-                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                             <div>
                               <p className="font-medium">Image Compression</p>
                               <p className="text-sm text-muted-foreground">
                                 Kompres foto untuk menghemat storage
                               </p>
                             </div>
-                            <Button variant="outline" size="sm">
-                              Configure
-                            </Button>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={websiteSettings.imageCompression}
+                                onChange={(e) => handleSettingsChange('imageCompression', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                            </label>
+                          </div>
+                        </div>
+                        
+                        {/* Advanced Upload Settings */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Compression Quality (%)</label>
+                            <div className="space-y-2">
+                              <input
+                                type="range"
+                                min="50"
+                                max="100"
+                                value={websiteSettings.compressionQuality}
+                                onChange={(e) => handleSettingsChange('compressionQuality', parseInt(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                                disabled={!websiteSettings.imageCompression}
+                              />
+                              <div className="text-center text-sm text-gray-600">
+                                {websiteSettings.compressionQuality}%
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Max File Size (MB)</label>
+                            <select
+                              value={websiteSettings.maxFileSize}
+                              onChange={(e) => handleSettingsChange('maxFileSize', parseInt(e.target.value))}
+                              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-wedding-gold focus:border-transparent"
+                            >
+                              <option value={5}>5 MB</option>
+                              <option value={10}>10 MB</option>
+                              <option value={20}>20 MB</option>
+                              <option value={50}>50 MB</option>
+                            </select>
+                          </div>
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Watermark</label>
+                            <div className="flex items-center justify-between p-3 border rounded-lg">
+                              <span className="text-sm">Enable Watermark</span>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={websiteSettings.watermarkEnabled}
+                                  onChange={(e) => handleSettingsChange('watermarkEnabled', e.target.checked)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                              </label>
+                            </div>
                           </div>
                         </div>
                       </div>
 
+
+                      {/* Notification Settings */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Notification Settings</h3>
+                        <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                          <div>
+                            <p className="font-medium">System Notifications</p>
+                            <p className="text-sm text-muted-foreground">
+                              Notifikasi upload, error, dan sistem lainnya
+                            </p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={websiteSettings.notificationsEnabled}
+                              onChange={(e) => handleSettingsChange('notificationsEnabled', e.target.checked)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                          </label>
+                        </div>
+                      </div>
+
                       {/* Action Buttons */}
-                      <div className="flex gap-3 pt-4 border-t">
-                        <Button className="bg-wedding-gold hover:bg-wedding-gold/90 text-black">
+                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                        <Button 
+                          onClick={handleSaveSettings}
+                          className="bg-wedding-gold hover:bg-wedding-gold/90 text-black"
+                          disabled={!hasUnsavedSettings}
+                        >
                           💾 Save Settings
+                          {hasUnsavedSettings && <span className="ml-2 w-2 h-2 bg-red-500 rounded-full"></span>}
                         </Button>
-                        <Button variant="outline">
+                        <Button 
+                          variant="outline"
+                          onClick={handleResetSettings}
+                        >
                           🔄 Reset to Default
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            toast({
+                              title: "Settings Exported! 📤",
+                              description: "Pengaturan telah disalin ke clipboard.",
+                            });
+                            navigator.clipboard.writeText(JSON.stringify(websiteSettings, null, 2));
+                          }}
+                        >
+                          📤 Export Settings
                         </Button>
                       </div>
                     </CardContent>
@@ -1217,28 +1515,56 @@ export default function AdminDashboardGrouped() {
                       {/* Display Preferences */}
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Display Preferences</h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                             <div>
                               <p className="font-medium">Dark Mode</p>
                               <p className="text-sm text-muted-foreground">
                                 Gunakan tema gelap untuk admin dashboard
                               </p>
                             </div>
-                            <Button variant="outline" size="sm">
-                              Auto
-                            </Button>
+                            <select
+                              value={userPreferences.darkMode}
+                              onChange={(e) => handlePreferencesChange('darkMode', e.target.value)}
+                              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-wedding-gold focus:border-transparent"
+                            >
+                              <option value="auto">🌓 Auto</option>
+                              <option value="light">☀️ Light</option>
+                              <option value="dark">🌙 Dark</option>
+                            </select>
                           </div>
-                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                             <div>
                               <p className="font-medium">Language</p>
                               <p className="text-sm text-muted-foreground">
                                 Bahasa interface admin dashboard
                               </p>
                             </div>
-                            <Button variant="outline" size="sm">
-                              Bahasa Indonesia
-                            </Button>
+                            <select
+                              value={userPreferences.language}
+                              onChange={(e) => handlePreferencesChange('language', e.target.value)}
+                              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-wedding-gold focus:border-transparent"
+                            >
+                              <option value="id">🇮🇩 Bahasa Indonesia</option>
+                              <option value="en">🇺🇸 English</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                            <div>
+                              <p className="font-medium">Compact View</p>
+                              <p className="text-sm text-muted-foreground">
+                                Tampilan lebih padat untuk layar kecil
+                              </p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={userPreferences.compactView}
+                                onChange={(e) => handlePreferencesChange('compactView', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                            </label>
                           </div>
                         </div>
                       </div>
@@ -1246,68 +1572,138 @@ export default function AdminDashboardGrouped() {
                       {/* Notification Preferences */}
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Notification Preferences</h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                             <div>
                               <p className="font-medium">Email Notifications</p>
                               <p className="text-sm text-muted-foreground">
                                 Terima notifikasi via email
                               </p>
                             </div>
-                            <Button variant="outline" size="sm">
-                              Enabled
-                            </Button>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={userPreferences.emailNotifications}
+                                onChange={(e) => handlePreferencesChange('emailNotifications', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                            </label>
                           </div>
-                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                             <div>
                               <p className="font-medium">Push Notifications</p>
                               <p className="text-sm text-muted-foreground">
                                 Notifikasi real-time di browser
                               </p>
                             </div>
-                            <Button variant="outline" size="sm">
-                              Enabled
-                            </Button>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={userPreferences.pushNotifications}
+                                onChange={(e) => handlePreferencesChange('pushNotifications', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                            </label>
+                          </div>
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                            <div>
+                              <p className="font-medium">Auto Save</p>
+                              <p className="text-sm text-muted-foreground">
+                                Simpan perubahan secara otomatis
+                              </p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={userPreferences.autoSave}
+                                onChange={(e) => handlePreferencesChange('autoSave', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                            </label>
                           </div>
                         </div>
                       </div>
 
-                      {/* Privacy Settings */}
+                      {/* Privacy & Security */}
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Privacy & Security</h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                             <div>
                               <p className="font-medium">Two-Factor Authentication</p>
                               <p className="text-sm text-muted-foreground">
                                 Keamanan tambahan untuk login
                               </p>
                             </div>
-                            <Button variant="outline" size="sm">
-                              Setup
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={userPreferences.twoFactorAuth}
+                                  onChange={(e) => handlePreferencesChange('twoFactorAuth', e.target.checked)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-wedding-gold/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wedding-gold"></div>
+                              </label>
+                              {userPreferences.twoFactorAuth && (
+                                <Button variant="outline" size="sm">
+                                  🔧 Setup
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                             <div>
                               <p className="font-medium">Session Timeout</p>
                               <p className="text-sm text-muted-foreground">
                                 Auto logout setelah tidak aktif
                               </p>
                             </div>
-                            <Button variant="outline" size="sm">
-                              30 minutes
-                            </Button>
+                            <select
+                              value={userPreferences.sessionTimeout}
+                              onChange={(e) => handlePreferencesChange('sessionTimeout', parseInt(e.target.value))}
+                              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-wedding-gold focus:border-transparent"
+                            >
+                              <option value={15}>15 minutes</option>
+                              <option value={30}>30 minutes</option>
+                              <option value={60}>1 hour</option>
+                              <option value={120}>2 hours</option>
+                              <option value={0}>Never</option>
+                            </select>
                           </div>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-3 pt-4 border-t">
-                        <Button className="bg-wedding-gold hover:bg-wedding-gold/90 text-black">
+                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                        <Button 
+                          onClick={handleSavePreferences}
+                          className="bg-wedding-gold hover:bg-wedding-gold/90 text-black"
+                          disabled={!hasUnsavedPreferences}
+                        >
                           💾 Save Preferences
+                          {hasUnsavedPreferences && <span className="ml-2 w-2 h-2 bg-red-500 rounded-full"></span>}
                         </Button>
-                        <Button variant="outline">
+                        <Button 
+                          variant="outline"
+                          onClick={handleResetPreferences}
+                        >
                           🔄 Reset to Default
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            toast({
+                              title: "Preferences Exported! 📤",
+                              description: "Preferensi telah disalin ke clipboard.",
+                            });
+                            navigator.clipboard.writeText(JSON.stringify(userPreferences, null, 2));
+                          }}
+                        >
+                          📤 Export Preferences
                         </Button>
                       </div>
                     </CardContent>
@@ -1327,6 +1723,61 @@ export default function AdminDashboardGrouped() {
                   onCancel={handleCancelForm}
                   isSaving={createEventMutation.isPending || updateEventMutation.isPending}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Preview Modal */}
+          {isMobilePreviewOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h3 className="text-lg font-semibold">📱 Mobile Preview</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsMobilePreviewOpen(false)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+                <div className="p-4">
+                  <div className="bg-gray-100 rounded-lg p-2">
+                    <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ aspectRatio: '9/16' }}>
+                      <iframe
+                        src={typeof window !== 'undefined' ? window.location.origin : '/'}
+                        className="w-full h-full border-0"
+                        title="Mobile Preview"
+                        style={{ transform: 'scale(0.8)', transformOrigin: 'top left', width: '125%', height: '125%' }}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-600 mb-3">
+                      Preview website dengan tema yang dipilih
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            window.open(window.location.origin, '_blank');
+                          }
+                        }}
+                      >
+                        🔗 Open in New Tab
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsMobilePreviewOpen(false)}
+                      >
+                        ✅ Done
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

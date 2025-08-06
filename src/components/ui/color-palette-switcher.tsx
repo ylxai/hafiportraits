@@ -24,13 +24,15 @@ interface ColorPaletteSwitcherProps {
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
   className?: string;
+  onPaletteChange?: (paletteId: string) => void;
 }
 
 export function ColorPaletteSwitcher({ 
   variant = 'button',
   size = 'md',
   showLabel = true,
-  className = ''
+  className = '',
+  onPaletteChange
 }: ColorPaletteSwitcherProps) {
   const { 
     currentPalette, 
@@ -92,7 +94,10 @@ export function ColorPaletteSwitcher({
             <PaletteSelector 
               currentPalette={currentPalette}
               availablePalettes={availablePalettes}
-              onPaletteChange={changePalette}
+              onPaletteChange={(id) => {
+                changePalette(id);
+                onPaletteChange?.(id);
+              }}
               onReset={resetPalette}
             />
           </DropdownMenuContent>
@@ -116,7 +121,10 @@ export function ColorPaletteSwitcher({
         <PaletteSelector 
           currentPalette={currentPalette}
           availablePalettes={availablePalettes}
-          onPaletteChange={changePalette}
+          onPaletteChange={(id) => {
+            changePalette(id);
+            onPaletteChange?.(id);
+          }}
           onReset={resetPalette}
           inline
         />
@@ -152,7 +160,10 @@ export function ColorPaletteSwitcher({
         <PaletteSelector 
           currentPalette={currentPalette}
           availablePalettes={availablePalettes}
-          onPaletteChange={changePalette}
+          onPaletteChange={(id) => {
+            changePalette(id);
+            onPaletteChange?.(id);
+          }}
           onReset={resetPalette}
         />
       </DropdownMenuContent>

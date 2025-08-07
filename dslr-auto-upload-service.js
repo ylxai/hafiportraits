@@ -19,8 +19,8 @@ const { WatermarkProcessor } = require('./src/lib/watermark-processor.js');
 // Import optimized configuration
 const { config: CONFIG, validateConfig } = require('./dslr.config.js');
 
-// Import event manager
-const DSLREventManager = require('./dslr-event-manager.js');
+// Import hybrid event manager
+const DSLRHybridEventManager = require('./dslr-hybrid-event-manager.js');
 
 // Validate configuration on startup
 const configErrors = validateConfig();
@@ -48,8 +48,8 @@ class DSLRAutoUploader {
     const { DSLRConfigManager } = require('./src/lib/dslr-config-manager.js');
     this.configManager = new DSLRConfigManager(CONFIG);
     
-    // Initialize event manager
-    this.eventManager = new DSLREventManager();
+    // Initialize hybrid event manager
+    this.eventManager = new DSLRHybridEventManager();
     this.currentEvent = null;
     
     // Initialize watermark processor
@@ -318,8 +318,9 @@ class DSLRAutoUploader {
       // Create FormData
       const formData = new FormData();
       formData.append('file', fileBuffer, fileName);
-      formData.append('uploaderName', CONFIG.EVENT.UPLOADER_NAME);
-      formData.append('albumName', CONFIG.EVENT.ALBUM_NAME);
+      const eventConfig = this.getEventConfig();
+      formData.append('uploaderName', eventConfig.uploaderName);
+      formData.append('albumName', eventConfig.albumName);
       
       // Upload via API
       const response = await fetch(

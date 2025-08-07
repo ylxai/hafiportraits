@@ -1,0 +1,20 @@
+{
+  "id": "test-qr-fix-2025-01-15",
+  "name": "Test QR Fix",
+  "description": "",
+  "date": "2025-01-15",
+  "photographer": "Test Photographer",
+  "album": "Official",
+  "apiUrl": "https://hafiportrait.photography",
+  "accessCode": "5HSP24",
+  "shareableLink": "https://hafiportrait.photography/event/test-qr-fix-2025-01-15",
+  "qrCodeData": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fhafiportrait.photography%2Fevent%2Ftest-qr-fix-2025-01-15",
+  "watermarkEnabled": false,
+  "backupEnabled": true,
+  "created": "2025-08-07T06:16:18.844Z",
+  "updated": "2025-08-07T06:16:18.844Z",
+  "status": "active",
+  "syncStatus": "synced",
+  "createdVia": "cli",
+  "lastSyncAttempt": "2025-08-07T06:16:19.832Z"
+}

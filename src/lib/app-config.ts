@@ -16,8 +16,9 @@ export function getAppBaseUrl(): string {
   }
 
   // Server-side: Check environment variables in order of priority
+  // Skip localhost URLs in production environment
   const envUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (envUrl && envUrl !== 'http://localhost:3000') {
+  if (envUrl && envUrl !== 'http://localhost:3000' && !envUrl.includes('localhost')) {
     return envUrl;
   }
 

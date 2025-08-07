@@ -1,3 +1,5 @@
+import { generateEventUrl } from '@/lib/app-config';
+
 /**
  * QR Code Generator Utility
  * Generates QR codes for events
@@ -14,8 +16,8 @@ export async function generateQRCode(eventId: string, accessCode: string): Promi
     // Use dynamic import to avoid SSR issues
     const QRCode = (await import('qrcode')).default;
     
-    // Create the URL for the event with access code
-    const eventUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/event/${eventId}?code=${accessCode}`;
+    // Create the URL for the event with access code using centralized config
+    const eventUrl = generateEventUrl(eventId, accessCode);
     
     // Generate QR code as data URL
     const qrDataUrl = await QRCode.toDataURL(eventUrl, {
@@ -41,5 +43,5 @@ export async function generateQRCode(eventId: string, accessCode: string): Promi
  * @returns A shareable link for the event
  */
 export function generateShareableLink(eventId: string, accessCode: string): string {
-  return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/event/${eventId}?code=${accessCode}`;
+  return generateEventUrl(eventId, accessCode);
 }

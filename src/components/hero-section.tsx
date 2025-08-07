@@ -1,10 +1,9 @@
 'use client';
 
 import { Button } from "@/components/ui/button"; 
-import { Camera, Heart, Share2, Sparkles, Zap, Users, Star, Award, Clock, Shield } from "lucide-react";
+import { Camera, Heart, Share2, Sparkles, Zap, Users, Star, Award, Clock, Shield, Phone, ArrowRight, Eye } from "lucide-react";
 import { motion, Easing } from "framer-motion";
 import { useState, useEffect } from "react";
-import InteractivePolaroidStack from "@/components/ui/interactive-polaroid-stack";
 
 export default function HeroSection() {
   // State untuk dynamic content
@@ -38,7 +37,7 @@ export default function HeroSection() {
   
   useEffect(() => {
     const animateStats = () => {
-      const targetStats = { events: 1000, photos: 50000, clients: 500 };
+      const targetStats = { events: 100, photos: 50000, clients: 100 };
       const duration = 2000;
       const steps = 60;
       const stepDuration = duration / steps;
@@ -259,43 +258,45 @@ export default function HeroSection() {
             </div>
           </motion.div>
           
-          {/* Interactive Polaroid Stack */}
-          <motion.div
-            variants={subtitleVariants}
-            initial="hidden"
-            animate="visible"
-            className="mb-6 sm:mb-8"
-          >
-            <InteractivePolaroidStack />
-          </motion.div>
 
-          {/* Enhanced Mobile-First CTA Buttons */}
+          {/* Enhanced Gradient Glow CTA Buttons */}
           <motion.div
             variants={buttonVariants}
             initial="hidden"
             animate="visible"
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 mb-8 sm:mb-12"
+            className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center px-4 mb-8 sm:mb-12"
           >
+            {/* Primary CTA - Hubungi Kami */}
             <Button 
               asChild
               size="lg" 
-              className="btn-dynamic-primary mobile-button text-base sm:text-lg py-5 sm:py-6 px-8 sm:px-10 transform hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shadow-lg hover:shadow-xl font-bold"
+              className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 hover:from-orange-600 hover:via-pink-600 hover:to-purple-700 text-white font-bold text-base sm:text-lg py-5 sm:py-6 px-8 sm:px-10 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-pink-500/25 transform hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto border-0 before:absolute before:inset-0 before:bg-white/20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700"
             >
-              <a href="#contact" className="flex items-center justify-center gap-3">
-                <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
-                📞 Hubungi Kami Sekarang
+              <a href="#contact" className="flex items-center justify-center gap-3 relative z-10">
+                <div className="relative">
+                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 group-hover:rotate-12 group-hover:scale-110" />
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-ping group-hover:animate-bounce"></div>
+                </div>
+                Hubungi Kami
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse group-hover:animate-spin" />
               </a>
             </Button>
             
+            {/* Secondary CTA - Portfolio */}
             <Button 
               asChild
-              variant="outline" 
               size="lg"
-              className="btn-dynamic-secondary mobile-button text-base sm:text-lg py-5 sm:py-6 px-8 sm:px-10 transform hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto shadow-lg hover:shadow-xl font-bold border-2"
+              className="group relative overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-700 text-white font-bold text-base sm:text-lg py-5 sm:py-6 px-8 sm:px-10 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto border-0 before:absolute before:inset-0 before:bg-white/20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700"
             >
-              <a href="#gallery" className="flex items-center justify-center gap-3">
-                <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-                💫 Lihat Portfolio Kami
+              <a href="#gallery" className="flex items-center justify-center gap-3 relative z-10">
+                <div className="relative">
+                  <Eye className="w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" />
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping group-hover:animate-bounce animation-delay-200"></div>
+                </div>
+                Portfolio
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                <Heart className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse group-hover:animate-bounce text-pink-200" />
               </a>
             </Button>
           </motion.div>
@@ -310,7 +311,7 @@ export default function HeroSection() {
             <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-dynamic-secondary/80 text-sm sm:text-base">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-dynamic-accent" />
-                <span className="font-medium">1000+ Event</span>
+                <span className="font-medium">100+ Event</span>
               </div>
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-dynamic-accent" />

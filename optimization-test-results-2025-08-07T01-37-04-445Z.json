@@ -1,0 +1,65 @@
+{
+  "timestamp": "2025-08-07T01:37:04.445Z",
+  "test_type": "database_optimization",
+  "results": [
+    {
+      "endpoint": "/api/events/b862446b-c27a-41f7-908c-81d2b7835529/photos",
+      "avg": 191,
+      "min": 120,
+      "max": 846,
+      "p95": 846,
+      "success": 15,
+      "total": 15,
+      "successRate": 100
+    },
+    {
+      "endpoint": "/api/events/b862446b-c27a-41f7-908c-81d2b7835529",
+      "avg": 0,
+      "success": 0,
+      "total": 15,
+      "successRate": 0,
+      "errors": [
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500",
+        "500"
+      ]
+    },
+    {
+      "endpoint": "/api/test/db",
+      "avg": 920,
+      "min": 851,
+      "max": 1342,
+      "p95": 1342,
+      "success": 15,
+      "total": 15,
+      "successRate": 100
+    },
+    {
+      "endpoint": "/api/admin/stats",
+      "avg": 904,
+      "min": 823,
+      "max": 1172,
+      "p95": 1172,
+      "success": 15,
+      "total": 15,
+      "successRate": 100
+    }
+  ],
+  "summary": {
+    "total_endpoints": 4,
+    "average_response": 504,
+    "overall_success_rate": 75
+  }
+}

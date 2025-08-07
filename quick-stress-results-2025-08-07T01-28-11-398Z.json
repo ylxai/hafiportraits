@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-08-07T01:28:11.399Z",
+  "config": {
+    "concurrent": 5,
+    "total": 9
+  },
+  "results": {
+    "total": 9,
+    "success": 0,
+    "failed": 9,
+    "errors": [
+      {
+        "id": 2,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 581
+      },
+      {
+        "id": 3,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 601
+      },
+      {
+        "id": 1,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 650
+      },
+      {
+        "id": 5,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 202
+      },
+      {
+        "id": 6,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 219
+      },
+      {
+        "id": 4,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 224
+      },
+      {
+        "id": 8,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 188
+      },
+      {
+        "id": 7,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 205
+      },
+      {
+        "id": 9,
+        "error": "{\"message\":\"Failed to upload photo: Failed to process image\",\"details\":\"Failed to process image\"}",
+        "time": 217
+      }
+    ],
+    "times": [
+      188,
+      202,
+      205,
+      217,
+      219,
+      224,
+      581,
+      601,
+      650
+    ],
+    "startTime": 1754530088300,
+    "endTime": 1754530091397
+  },
+  "assessment": {
+    "successRate": 0,
+    "avgTime": 343,
+    "throughput": 0
+  }
+}

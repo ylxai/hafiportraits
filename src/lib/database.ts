@@ -61,12 +61,14 @@ export type MessageReactions = {
 export type Message = {
   id: string;
   event_id: string;
-  sender_name: string;
-  content: string;
-  sent_at: string;
+  sender_name?: string; // Make optional for compatibility
+  content?: string; // Make optional for compatibility
+  guest_name?: string; // Database field
+  message?: string; // Database field
+  sent_at?: string; // Make optional for compatibility
+  created_at?: string; // Database field
   hearts: number;
   reactions?: MessageReactions;
-  guest_name?: string; // Add guest_name as optional for compatibility
 };
 
 export type Stats = {
@@ -584,7 +586,7 @@ class DatabaseService {
       .from('messages')
       .select('*')
       .eq('event_id', eventId)
-      .order('sent_at', { ascending: false });
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return data;
   }

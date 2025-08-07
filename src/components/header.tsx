@@ -13,10 +13,9 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="text-xl sm:text-2xl font-bold text-dynamic-accent flex items-center gap-2 group">
-            <Camera className="w-6 h-6 sm:w-7 sm:h-7 group-hover:rotate-12 transition-transform duration-300" />
-            <span className="hidden xs:inline bg-gradient-to-r from-dynamic-accent to-dynamic-accent bg-clip-text">HafiPortrait</span>
-            <span className="xs:hidden bg-gradient-to-r from-dynamic-accent to-dynamic-accent bg-clip-text">Hafi</span>
+          <Link href="/" className="text-lg sm:text-xl lg:text-2xl font-bold text-dynamic-accent flex items-center gap-2 group">
+            <Camera className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 group-hover:rotate-12 transition-transform duration-300" />
+            <span className="bg-gradient-to-r from-dynamic-accent to-dynamic-accent bg-clip-text">HafiPortrait</span>
           </Link>
           
           {/* Desktop Navigation */}

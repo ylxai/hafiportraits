@@ -864,10 +864,10 @@ export default function EventPage() {
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-800">{message.guest_name}</h4>
-                          <p className="text-gray-600 mt-1">{message.message}</p>
+                          <h4 className="font-semibold text-gray-800">{message.guest_name || message.sender_name}</h4>
+                          <p className="text-gray-600 mt-1">{message.message || message.content}</p>
                           <p className="text-xs text-gray-400 mt-2">
-                            {new Date(message.created_at).toLocaleDateString('id-ID', {
+                            {new Date(message.created_at || message.sent_at || new Date()).toLocaleDateString('id-ID', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',

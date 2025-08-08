@@ -16,7 +16,7 @@ pm2 delete hafiportrait 2>/dev/null || echo "No existing process to delete"
 
 # Set production environment
 export NODE_ENV=production
-export NEXT_PUBLIC_APP_URL=https://ipvhepiuwpol.ap-southeast-1.clawcloudrun.com
+export NEXT_PUBLIC_APP_URL=https://hafiportrait.photography
 
 # Build the application
 echo "🏗️ Building application for production..."

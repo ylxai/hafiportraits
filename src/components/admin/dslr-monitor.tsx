@@ -36,6 +36,13 @@ interface DSLRStats {
   uploaderName: string;
   queueSize: number;
   uploadSpeed: number; // MB/s
+  serviceRunning: boolean;
+  lastHeartbeat: string | null;
+  cameraModel: string;
+  autoDetect: boolean;
+  backupEnabled: boolean;
+  notificationsEnabled: boolean;
+  watermarkEnabled: boolean;
 }
 
 interface RecentUpload {
@@ -69,7 +76,14 @@ export default function DSLRMonitor() {
     eventId: '',
     uploaderName: 'Official Photographer',
     queueSize: 0,
-    uploadSpeed: 0
+    uploadSpeed: 0,
+    serviceRunning: false,
+    lastHeartbeat: null,
+    cameraModel: 'NIKON_D7100',
+    autoDetect: true,
+    backupEnabled: true,
+    notificationsEnabled: true,
+    watermarkEnabled: false
   });
 
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([]);
@@ -165,7 +179,14 @@ export default function DSLRMonitor() {
             eventId: data.eventId || prev.eventId,
             uploaderName: data.uploaderName || prev.uploaderName,
             queueSize: data.queueSize || 0,
-            uploadSpeed: data.uploadSpeed || 0
+            uploadSpeed: data.uploadSpeed || 0,
+            serviceRunning: data.serviceRunning || false,
+            lastHeartbeat: data.lastHeartbeat || null,
+            cameraModel: data.cameraModel || prev.cameraModel,
+            autoDetect: data.autoDetect !== undefined ? data.autoDetect : prev.autoDetect,
+            backupEnabled: data.backupEnabled !== undefined ? data.backupEnabled : prev.backupEnabled,
+            notificationsEnabled: data.notificationsEnabled !== undefined ? data.notificationsEnabled : prev.notificationsEnabled,
+            watermarkEnabled: data.watermarkEnabled !== undefined ? data.watermarkEnabled : prev.watermarkEnabled
           }));
           
           // Update settings with current values
@@ -271,19 +292,35 @@ export default function DSLRMonitor() {
           </div>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-            <Badge variant={stats.isConnected ? "default" : "destructive"} className="text-xs">
-              {stats.isConnected ? (
+            <Badge variant={stats.serviceRunning ? "default" : "destructive"} className="text-xs">
+              {stats.serviceRunning ? (
                 <>
                   <Wifi className="h-3 w-3 mr-1" />
-                  Connected
+                  Service Running
                 </>
               ) : (
                 <>
                   <WifiOff className="h-3 w-3 mr-1" />
-                  Disconnected
+                  Service Stopped
                 </>
               )}
             </Badge>
+            
+            {stats.serviceRunning && (
+              <Badge variant={stats.isConnected ? "default" : "secondary"} className="text-xs">
+                {stats.isConnected ? (
+                  <>
+                    <Camera className="h-3 w-3 mr-1" />
+                    Camera Connected
+                  </>
+                ) : (
+                  <>
+                    <Camera className="h-3 w-3 mr-1" />
+                    Camera Disconnected
+                  </>
+                )}
+              </Badge>
+            )}
             
             <button
               className={`mobile-btn touch-feedback ${
@@ -504,13 +541,33 @@ export default function DSLRMonitor() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center touch-feedback">
               <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 transition-colors ${
-                stats.isConnected ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                stats.serviceRunning ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+              }`}>
+                <Settings className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-medium">DSLR Service</p>
+              <p className="text-xs text-muted-foreground">
+                {stats.serviceRunning ? 'Running' : 'Stopped'}
+              </p>
+              {stats.lastHeartbeat && (
+                <p className="text-xs text-muted-foreground">
+                  Last: {new Date(stats.lastHeartbeat).toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+
+            <div className="text-center touch-feedback">
+              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 transition-colors ${
+                stats.isConnected ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
               }`}>
                 <Camera className="h-5 w-5" />
               </div>
               <p className="text-sm font-medium">Camera</p>
               <p className="text-xs text-muted-foreground">
                 {stats.isConnected ? 'Connected' : 'Disconnected'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {stats.cameraModel}
               </p>
             </div>
 
@@ -524,22 +581,24 @@ export default function DSLRMonitor() {
               <p className="text-xs text-muted-foreground">
                 {stats.isProcessing ? 'Active' : 'Paused'}
               </p>
+              <p className="text-xs text-muted-foreground">
+                {stats.uploadSpeed.toFixed(1)} MB/s
+              </p>
             </div>
 
             <div className="text-center touch-feedback">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 bg-green-100 text-green-600 transition-colors">
-                <Wifi className="h-5 w-5" />
-              </div>
-              <p className="text-sm font-medium">Internet</p>
-              <p className="text-xs text-muted-foreground">Connected</p>
-            </div>
-
-            <div className="text-center touch-feedback">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 bg-green-100 text-green-600 transition-colors">
+              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 transition-colors ${
+                stats.backupEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
+              }`}>
                 <FolderOpen className="h-5 w-5" />
               </div>
-              <p className="text-sm font-medium">Storage</p>
-              <p className="text-xs text-muted-foreground">Available</p>
+              <p className="text-sm font-medium">Local Backup</p>
+              <p className="text-xs text-muted-foreground">
+                {stats.backupEnabled ? 'Enabled' : 'Disabled'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {stats.watchFolder.split('/').pop()}
+              </p>
             </div>
           </div>
         </div>
@@ -684,32 +743,62 @@ export default function DSLRMonitor() {
 
           {/* Status Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-900 mb-2">📷 Current Configuration:</h4>
+            <h4 className="font-medium text-blue-900 mb-2">📷 Real-time Status:</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="text-center">
-                <div className={`font-medium ${dslrSettings.autoUpload ? 'text-green-600' : 'text-gray-600'}`}>
-                  {dslrSettings.autoUpload ? '✅ Enabled' : '❌ Disabled'}
+                <div className={`font-medium ${stats.serviceRunning ? 'text-green-600' : 'text-red-600'}`}>
+                  {stats.serviceRunning ? '✅ Running' : '❌ Stopped'}
                 </div>
-                <div className="text-blue-800">Auto Upload</div>
+                <div className="text-blue-800">DSLR Service</div>
               </div>
               <div className="text-center">
-                <div className={`font-medium ${dslrSettings.backupEnabled ? 'text-green-600' : 'text-gray-600'}`}>
-                  {dslrSettings.backupEnabled ? '💾 Active' : '❌ Disabled'}
+                <div className={`font-medium ${stats.backupEnabled ? 'text-green-600' : 'text-gray-600'}`}>
+                  {stats.backupEnabled ? '💾 Active' : '❌ Disabled'}
                 </div>
                 <div className="text-blue-800">Local Backup</div>
               </div>
               <div className="text-center">
-                <div className={`font-medium ${dslrSettings.notificationsEnabled ? 'text-purple-600' : 'text-gray-600'}`}>
-                  {dslrSettings.notificationsEnabled ? '🔔 Enabled' : '🔕 Disabled'}
+                <div className={`font-medium ${stats.notificationsEnabled ? 'text-purple-600' : 'text-gray-600'}`}>
+                  {stats.notificationsEnabled ? '🔔 Enabled' : '🔕 Disabled'}
                 </div>
                 <div className="text-blue-800">Notifications</div>
               </div>
               <div className="text-center">
-                <div className={`font-medium ${dslrSettings.watermarkEnabled ? 'text-blue-600' : 'text-gray-600'}`}>
-                  {dslrSettings.watermarkEnabled ? '🏷️ Active' : '❌ Disabled'}
+                <div className={`font-medium ${stats.watermarkEnabled ? 'text-blue-600' : 'text-gray-600'}`}>
+                  {stats.watermarkEnabled ? '🏷️ Active' : '❌ Disabled'}
                 </div>
                 <div className="text-blue-800">Watermark</div>
               </div>
+            </div>
+            
+            {/* Real-time Status Info */}
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-blue-900">Camera Model:</span>
+                  <div className="text-blue-700">{stats.cameraModel}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-900">Watch Folder:</span>
+                  <div className="text-blue-700 font-mono text-xs break-all">{stats.watchFolder}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-900">Active Event:</span>
+                  <div className="text-blue-700">{stats.eventId || 'Not set'}</div>
+                </div>
+              </div>
+              
+              {stats.lastHeartbeat && (
+                <div className="mt-2 text-xs text-blue-600">
+                  Last heartbeat: {new Date(stats.lastHeartbeat).toLocaleString()}
+                </div>
+              )}
+              
+              {!stats.serviceRunning && (
+                <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
+                  ⚠️ DSLR Service is not running. Start the service to see real-time data.
+                </div>
+              )}
             </div>
           </div>
         </div>

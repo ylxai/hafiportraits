@@ -18,7 +18,12 @@ const DEFAULT_STATUS = {
   queueSize: 0,
   uploadSpeed: 0,
   serviceRunning: false,
-  lastHeartbeat: null
+  lastHeartbeat: null,
+  cameraModel: 'NIKON_D7100',
+  autoDetect: true,
+  backupEnabled: true,
+  notificationsEnabled: true,
+  watermarkEnabled: false
 };
 
 function readDSLRStatus() {
@@ -82,7 +87,12 @@ let memoryStatus = {
   queueSize: 0,
   uploadSpeed: 0,
   serviceRunning: false,
-  lastHeartbeat: null
+  lastHeartbeat: null,
+  cameraModel: 'NIKON_D7100',
+  autoDetect: true,
+  backupEnabled: true,
+  notificationsEnabled: true,
+  watermarkEnabled: false
 };
 
 export async function POST(request: NextRequest) {

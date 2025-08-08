@@ -281,138 +281,141 @@ export default function DSLRMonitor() {
       {/* Header */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Camera className="h-5 w-5" />
-              DSLR Monitor
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Monitor upload otomatis dari Nikon D7100
-            </p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-            <Badge variant={stats.serviceRunning ? "default" : "destructive"} className="text-xs">
-              {stats.serviceRunning ? (
-                <>
-                  <Wifi className="h-3 w-3 mr-1" />
-                  Service Running
-                </>
-              ) : (
-                <>
-                  <WifiOff className="h-3 w-3 mr-1" />
-                  Service Stopped
-                </>
-              )}
-            </Badge>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                <span className="truncate">DSLR Monitor</span>
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Monitor upload otomatis dari Nikon D7100
+              </CardDescription>
+            </div>
             
-            {stats.serviceRunning && (
-              <Badge variant={stats.isConnected ? "default" : "secondary"} className="text-xs">
-                {stats.isConnected ? (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Badge variant={stats.serviceRunning ? "default" : "destructive"} className="text-xs">
+                  {stats.serviceRunning ? (
+                    <>
+                      <Wifi className="h-3 w-3 mr-1" />
+                      Service Running
+                    </>
+                  ) : (
+                    <>
+                      <WifiOff className="h-3 w-3 mr-1" />
+                      Service Stopped
+                    </>
+                  )}
+                </Badge>
+                
+                {stats.serviceRunning && (
+                  <Badge variant={stats.isConnected ? "default" : "secondary"} className="text-xs">
+                    {stats.isConnected ? (
+                      <>
+                        <Camera className="h-3 w-3 mr-1" />
+                        Camera Connected
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-3 w-3 mr-1" />
+                        Camera Disconnected
+                      </>
+                    )}
+                  </Badge>
+                )}
+              </div>
+              
+              <Button
+                variant={stats.isProcessing ? "destructive" : "default"}
+                size="sm"
+                onClick={handlePauseResume}
+              >
+                {stats.isProcessing ? (
                   <>
-                    <Camera className="h-3 w-3 mr-1" />
-                    Camera Connected
+                    <Pause className="h-4 w-4 mr-1" />
+                    <span className="hidden xs:inline">Pause</span>
                   </>
                 ) : (
                   <>
-                    <Camera className="h-3 w-3 mr-1" />
-                    Camera Disconnected
+                    <Play className="h-4 w-4 mr-1" />
+                    <span className="hidden xs:inline">Resume</span>
                   </>
                 )}
-              </Badge>
-            )}
-            
-            <button
-              className={`mobile-btn touch-feedback ${
-                stats.isProcessing ? 'mobile-btn-destructive' : 'mobile-btn-primary'
-              }`}
-              onClick={handlePauseResume}
-            >
-              {stats.isProcessing ? (
-                <>
-                  <Pause className="h-4 w-4 mr-1" />
-                  Pause
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-1" />
-                  Resume
-                </>
-              )}
-            </button>
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
 
       {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <span className="text-sm font-medium">Total Uploaded</span>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Uploaded</CardTitle>
             <Upload className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mobile-card-content">
+          </CardHeader>
+          <CardContent>
             <div className="text-2xl font-bold">{stats.totalUploaded}</div>
             <p className="text-xs text-muted-foreground">
               {stats.failedUploads} failed
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <span className="text-sm font-medium">Upload Speed</span>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Upload Speed</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mobile-card-content">
+          </CardHeader>
+          <CardContent>
             <div className="text-2xl font-bold">{stats.uploadSpeed.toFixed(1)} MB/s</div>
             <p className="text-xs text-muted-foreground">
               {stats.queueSize} in queue
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <span className="text-sm font-medium">Last Upload</span>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Last Upload</CardTitle>
             <Image className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mobile-card-content">
+          </CardHeader>
+          <CardContent>
             <div className="text-sm font-bold">
               {stats.lastUpload ? formatUploadTime(stats.lastUpload) : 'Never'}
             </div>
             <p className="text-xs text-muted-foreground">
               Event: {stats.eventId || 'Not set'}
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <span className="text-sm font-medium">Watch Folder</span>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Watch Folder</CardTitle>
             <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mobile-card-content">
+          </CardHeader>
+          <CardContent>
             <div className="text-xs font-mono break-all">
               {stats.watchFolder}
             </div>
             <p className="text-xs text-muted-foreground">
               Monitoring active
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Settings Panel */}
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <h3 className="mobile-card-title flex items-center gap-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
               DSLR Settings
-            </h3>
-          </div>
-          <div className="mobile-card-content mobile-spacing">
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <Label htmlFor="auto-upload">Auto Upload</Label>
               <Switch
@@ -426,11 +429,11 @@ export default function DSLRMonitor() {
 
             <Separator />
 
-            <div className="mobile-form-group">
-              <label htmlFor="event-id" className="mobile-label">Active Event</label>
+            <div className="space-y-2">
+              <Label htmlFor="event-id">Active Event</Label>
               <select
                 id="event-id"
-                className="mobile-input"
+                className="w-full px-3 py-2 border border-input rounded-md text-sm"
                 value={settings.eventId}
                 onChange={(e) => 
                   setSettings(prev => ({ ...prev, eventId: e.target.value }))
@@ -463,11 +466,10 @@ export default function DSLRMonitor() {
               />
             </div>
 
-            <div className="mobile-form-group">
-              <label htmlFor="watch-folder" className="mobile-label">Watch Folder</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="watch-folder">Watch Folder</Label>
+              <Input
                 id="watch-folder"
-                className="mobile-input"
                 value={settings.watchFolder}
                 onChange={(e) => 
                   setSettings(prev => ({ ...prev, watchFolder: e.target.value }))
@@ -476,20 +478,20 @@ export default function DSLRMonitor() {
               />
             </div>
 
-            <button onClick={handleSettingsUpdate} className="mobile-btn mobile-btn-primary touch-feedback w-full">
+            <Button onClick={handleSettingsUpdate} className="w-full">
               Update Settings
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Recent Uploads */}
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <h3 className="mobile-card-title">Recent Uploads</h3>
-            <p className="text-sm text-muted-foreground">Latest photos uploaded from DSLR</p>
-          </div>
-          <div className="mobile-card-content">
-            <div className="mobile-spacing">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Uploads</CardTitle>
+            <CardDescription>Latest photos uploaded from DSLR</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
               {recentUploads.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Camera className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -498,7 +500,7 @@ export default function DSLRMonitor() {
                 </div>
               ) : (
                 recentUploads.map((upload) => (
-                  <div key={upload.id} className="flex items-center justify-between p-3 border rounded-lg touch-feedback">
+                  <div key={upload.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
                       {upload.status === 'success' && (
                         <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
@@ -528,18 +530,18 @@ export default function DSLRMonitor() {
                 ))
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Connection Status */}
-      <div className="mobile-card">
-        <div className="mobile-card-header">
-          <h3 className="mobile-card-title">System Status</h3>
-        </div>
-        <div className="mobile-card-content">
+      {/* System Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle>System Status</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center touch-feedback">
+            <div className="text-center p-4 rounded-lg hover:bg-muted/50 transition-colors">
               <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 transition-colors ${
                 stats.serviceRunning ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
               }`}>
@@ -556,7 +558,7 @@ export default function DSLRMonitor() {
               )}
             </div>
 
-            <div className="text-center touch-feedback">
+            <div className="text-center p-4 rounded-lg hover:bg-muted/50 transition-colors">
               <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 transition-colors ${
                 stats.isConnected ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
               }`}>
@@ -571,7 +573,7 @@ export default function DSLRMonitor() {
               </p>
             </div>
 
-            <div className="text-center touch-feedback">
+            <div className="text-center p-4 rounded-lg hover:bg-muted/50 transition-colors">
               <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 transition-colors ${
                 stats.isProcessing ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
               }`}>
@@ -586,7 +588,7 @@ export default function DSLRMonitor() {
               </p>
             </div>
 
-            <div className="text-center touch-feedback">
+            <div className="text-center p-4 rounded-lg hover:bg-muted/50 transition-colors">
               <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 transition-colors ${
                 stats.backupEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
               }`}>

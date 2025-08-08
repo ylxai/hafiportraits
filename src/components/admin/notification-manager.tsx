@@ -828,19 +828,26 @@ export default function NotificationManager() {
       )}
 
       {activeTab === 'subscribers' && (
-        <div className="mobile-spacing slide-up">
-          <div className="mobile-card">
-            <div className="mobile-card-header">
-              <h3 className="mobile-card-title">Subscribers</h3>
-              <button className="mobile-btn mobile-btn-primary touch-feedback">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Subscribers</CardTitle>
+              <Button size="sm">
                 <Plus className="h-4 w-4 mr-1" />
                 Add
-              </button>
+              </Button>
             </div>
-            <div className="mobile-card-content">
-              <div className="mobile-spacing">
-                {subscribers.map((subscriber) => (
-                  <div key={subscriber.id} className="border rounded-lg p-4 space-y-3">
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {subscribers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Belum ada subscribers</p>
+                </div>
+              ) : (
+                subscribers.map((subscriber) => (
+                  <div key={subscriber.id} className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -861,20 +868,20 @@ export default function NotificationManager() {
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <button className="p-2 hover:bg-muted rounded touch-feedback">
+                        <Button variant="ghost" size="sm">
                           <Edit className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 hover:bg-muted rounded touch-feedback">
+                        </Button>
+                        <Button variant="ghost" size="sm">
                           <Trash2 className="h-4 w-4 text-red-500" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

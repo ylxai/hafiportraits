@@ -1,0 +1,13 @@
+{
+  "name": "cloudflare-google-storage-dependencies",
+  "version": "1.0.0",
+  "description": "Additional dependencies for Cloudflare R2 + Google Drive storage",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.490.0",
+    "@aws-sdk/s3-request-presigner": "^3.490.0",
+    "googleapis": "^131.0.0"
+  },
+  "scripts": {
+    "install-storage-deps": "npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner googleapis"
+  }
+}

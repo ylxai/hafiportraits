@@ -108,7 +108,7 @@ sessions/
 dslr-runtime.json
 dslr-status.json
 current-session.json
-
+google-drive-tokens.json
 # Test files
 tmp_rovodev_*
 

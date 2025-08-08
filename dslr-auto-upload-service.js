@@ -19,6 +19,9 @@ const { WatermarkProcessor } = require('./src/lib/watermark-processor.js');
 // Import optimized configuration
 const { config: CONFIG, validateConfig } = require('./dslr.config.js');
 
+// Import hybrid event manager
+const DSLRHybridEventManager = require('./dslr-hybrid-event-manager.js');
+
 // Validate configuration on startup
 const configErrors = validateConfig();
 if (configErrors.length > 0) {
@@ -45,8 +48,76 @@ class DSLRAutoUploader {
     const { DSLRConfigManager } = require('./src/lib/dslr-config-manager.js');
     this.configManager = new DSLRConfigManager(CONFIG);
     
+    // Initialize hybrid event manager
+    this.eventManager = new DSLRHybridEventManager();
+    this.currentEvent = null;
+    
     // Initialize watermark processor
     this.watermarkProcessor = new WatermarkProcessor(CONFIG);
+  }
+
+  // Load current event configuration
+  async loadCurrentEvent() {
+    try {
+      this.currentEvent = await this.eventManager.getCurrentEvent();
+      console.log(`✅ Loaded event: ${this.currentEvent.name} (${this.currentEvent.id})`);
+      return this.currentEvent;
+    } catch (error) {
+      console.error('❌ No active event found!');
+      console.error('💡 Please set an active event first:');
+      console.error('   node dslr-event-manager.js list');
+      console.error('   node dslr-event-manager.js activate <event-id>');
+      console.error('   OR create new event:');
+      console.error('   node dslr-event-manager.js quick "Event Name" 2025-01-15');
+      throw error;
+    }
+  }
+
+  // Get current event configuration for uploads
+  getEventConfig() {
+    if (!this.currentEvent) {
+      throw new Error('No active event loaded. Call loadCurrentEvent() first.');
+    }
+    
+    return {
+      eventId: this.currentEvent.id,
+      uploaderName: this.currentEvent.photographer,
+      albumName: this.currentEvent.album,
+      apiUrl: this.currentEvent.apiUrl,
+      watermarkEnabled: this.currentEvent.watermarkEnabled,
+      backupEnabled: this.currentEvent.backupEnabled
+    };
+  }
+
+  // Initialize service with event loading
+  async initialize() {
+    console.log('🚀 Initializing DSLR Auto Upload Service...');
+    
+    // Load current event
+    await this.loadCurrentEvent();
+    
+    // Initialize watermark if enabled for this event
+    if (this.currentEvent.watermarkEnabled) {
+      console.log('🏷️ Initializing watermark processor...');
+      await this.watermarkProcessor.initialize();
+    }
+    
+    // Start monitoring
+    this.startFileWatcher();
+    this.startCameraMonitoring();
+    this.startHeartbeat();
+    
+    console.log('✅ DSLR Auto Upload Service initialized successfully!');
+    console.log(`📸 Active Event: ${this.currentEvent.name}`);
+    console.log(`📅 Event ID: ${this.currentEvent.id}`);
+    console.log(`👨‍💼 Photographer: ${this.currentEvent.photographer}`);
+    console.log(`🌐 API URL: ${this.currentEvent.apiUrl}`);
+    console.log(`🏷️ Watermark: ${this.currentEvent.watermarkEnabled ? 'Enabled' : 'Disabled'}`);
+    console.log(`💾 Backup: ${this.currentEvent.backupEnabled ? 'Enabled' : 'Disabled'}`);
+  }
+
+  // Start file watcher
+  startFileWatcher() {
     
     this.init();
   }
@@ -247,12 +318,13 @@ class DSLRAutoUploader {
       // Create FormData
       const formData = new FormData();
       formData.append('file', fileBuffer, fileName);
-      formData.append('uploaderName', CONFIG.EVENT.UPLOADER_NAME);
-      formData.append('albumName', CONFIG.EVENT.ALBUM_NAME);
+      const eventConfig = this.getEventConfig();
+      formData.append('uploaderName', eventConfig.uploaderName);
+      formData.append('albumName', eventConfig.albumName);
       
       // Upload via API
       const response = await fetch(
-        `${CONFIG.API_BASE_URL}/api/events/${CONFIG.EVENT_ID}/photos`,
+        `${this.getEventConfig().apiUrl}/api/events/${this.getEventConfig().eventId}/photos`,
         {
           method: 'POST',
           body: formData
@@ -396,11 +468,11 @@ class DSLRAutoUploader {
     
     if (milestones.includes(current)) {
       this.notificationIntegration.triggerEvent('event_milestone', {
-        eventName: CONFIG.EVENT_ID,
-        eventId: CONFIG.EVENT_ID,
+        eventName: this.getEventConfig().eventId,
+        eventId: this.getEventConfig().eventId,
         milestone: current,
         totalPhotos: current,
-        albumName: CONFIG.ALBUM_NAME
+        albumName: this.getEventConfig().albumName
       });
     }
   }
@@ -441,20 +513,39 @@ class DSLRAutoUploader {
       processedFiles: this.processedFiles.size,
       isProcessing: this.isProcessing,
       watchFolder: CONFIG.WATCH_FOLDER,
-      eventId: CONFIG.EVENT_ID,
+      eventId: this.currentEvent ? this.currentEvent.id : 'no-event',
       uploadStats: this.uploadStats
     };
   }
 }
 
 // Start service
-const uploader = new DSLRAutoUploader();
+async function startService() {
+  try {
+    const uploader = new DSLRAutoUploader();
+    await uploader.initialize();
+    
+    console.log('\n🎯 DSLR Auto Upload Service is running!');
+    console.log('📸 Monitoring camera folder for new photos...');
+    console.log('🌐 Web dashboard: http://localhost:3000/admin');
+    console.log('⏹️  Press Ctrl+C to stop');
+    
+    // Graceful shutdown
+    process.on('SIGINT', () => {
+      console.log('\n👋 Shutting down DSLR Auto Upload Service...');
+      process.exit(0);
+    });
+    
+  } catch (error) {
+    console.error('❌ Failed to start DSLR service:', error.message);
+    process.exit(1);
+  }
+}
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n👋 Shutting down DSLR Auto Upload Service...');
-  process.exit(0);
-});
+// Start if called directly
+if (require.main === module) {
+  startService();
+}
 
 // Export untuk testing
 module.exports = DSLRAutoUploader;

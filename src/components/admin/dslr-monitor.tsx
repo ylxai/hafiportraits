@@ -603,8 +603,8 @@ export default function DSLRMonitor() {
               </p>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* DSLR Configuration */}
       <div className="mobile-card">

@@ -62,6 +62,7 @@ export default function EventPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<"all" | "official" | "guest">("all");
+  const [showQRModal, setShowQRModal] = useState(false);
 
   // Fetch event details
   const { data: event, isLoading: eventLoading } = useQuery({
@@ -380,12 +381,52 @@ export default function EventPage() {
     });
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Berhasil Disalin!",
-      description: "Link telah disalin ke clipboard.",
-    });
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        toast({
+          title: "Berhasil Disalin!",
+          description: "Link telah disalin ke clipboard.",
+        });
+      } else {
+        // Fallback untuk browser yang tidak support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          toast({
+            title: "Berhasil Disalin!",
+            description: "Link telah disalin ke clipboard.",
+          });
+        } catch (err) {
+          toast({
+            title: "Gagal Menyalin",
+            description: "Silakan salin link secara manual.",
+            variant: "destructive",
+          });
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Gagal Menyalin",
+        description: "Tidak dapat menyalin ke clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShowQR = () => {
+    setShowQRModal(true);
   };
 
   if (eventLoading) {
@@ -500,7 +541,7 @@ export default function EventPage() {
               <Button
                 variant="outline"
                 size={isMobile ? "sm" : "default"}
-                onClick={() => window.open(event.qr_code, '_blank')}
+                onClick={handleShowQR}
                 className={`mobile-button ${isMobile ? 'px-3 py-2' : ''}`}
               >
                 <QrCode className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
@@ -968,6 +1009,73 @@ export default function EventPage() {
             onLike={handleLikePhoto}
             onUnlike={() => { /* Implementasi Batal Suka jika diperlukan */ }}
           />
+        )}
+
+        {/* QR Code Modal */}
+        {showQRModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-sm w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="text-lg font-semibold">QR Code Event</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowQRModal(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="p-6 text-center space-y-4">
+                {event.qr_code ? (
+                  <>
+                    <div className="bg-white p-4 rounded-lg border-2 border-dashed border-gray-300 inline-block">
+                      <img 
+                        src={event.qr_code} 
+                        alt="QR Code Event" 
+                        className="w-64 h-64 mx-auto"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600">
+                        Scan QR code ini untuk mengakses event
+                      </p>
+                      <div className="space-y-2">
+                        <Button 
+                          onClick={() => window.open(event.qr_code, '_blank')}
+                          className="w-full bg-wedding-gold hover:bg-wedding-gold/90 text-black"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Buka QR Code
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => copyToClipboard(event.qr_code!)}
+                          className="w-full"
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy QR Code URL
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => copyToClipboard(event.shareable_link!)}
+                          className="w-full"
+                        >
+                          <Share2 className="w-4 h-4 mr-2" />
+                          Copy Link Event
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-gray-500 py-8">
+                    <QrCode className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>QR Code tidak tersedia</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

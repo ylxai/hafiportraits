@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - bcrypt
+  - esbuild
+  - msw
+  - sharp
+  - unrs-resolver
+  - workerd

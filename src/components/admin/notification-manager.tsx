@@ -212,9 +212,94 @@ export default function NotificationManager() {
     console.log('Settings updated:', settings);
   };
 
-  const handleSendTestNotification = () => {
-    // Send test notification
-    console.log('Sending test notification...');
+  const handleSendTestNotification = async () => {
+    try {
+      console.log('🧪 Sending test notification...');
+      
+      // Create test notification for local notification system
+      const testNotification = {
+        id: `test_${Date.now()}`,
+        title: '🧪 Test Notification',
+        message: 'This is a test notification from Admin Dashboard',
+        type: 'test',
+        timestamp: new Date().toISOString(),
+        read: false,
+        priority: 'normal' as const
+      };
+
+      // Add to notification history
+      const newHistoryItem: NotificationHistory = {
+        id: testNotification.id,
+        type: 'test',
+        title: testNotification.title,
+        message: testNotification.message,
+        recipients: 1,
+        sentAt: testNotification.timestamp,
+        deliveryRate: 100,
+        openRate: 0,
+        status: 'sent'
+      };
+
+      setHistory(prev => [newHistoryItem, ...prev]);
+
+      // Trigger browser notification if permission granted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(testNotification.title, {
+          body: testNotification.message,
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/badge-72x72.png',
+          tag: 'admin-test'
+        });
+      } else if ('Notification' in window && Notification.permission === 'default') {
+        // Request permission
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          new Notification(testNotification.title, {
+            body: testNotification.message,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/badge-72x72.png',
+            tag: 'admin-test'
+          });
+        }
+      }
+
+      // Dispatch custom event for notification bell
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-notification', {
+          detail: {
+            type: 'success',
+            message: 'Test notification sent successfully!',
+            notification: testNotification
+          }
+        }));
+
+        // Also dispatch for notification bell update
+        window.dispatchEvent(new CustomEvent('new-notification', {
+          detail: testNotification
+        }));
+      }
+
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        totalSent: prev.totalSent + 1
+      }));
+
+      console.log('✅ Test notification sent successfully!');
+      
+    } catch (error) {
+      console.error('❌ Error sending test notification:', error);
+      
+      // Dispatch error event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-notification', {
+          detail: {
+            type: 'error',
+            message: 'Failed to send test notification'
+          }
+        }));
+      }
+    }
   };
 
   const formatDateTime = (timestamp: string) => {
@@ -822,8 +907,8 @@ export default function NotificationManager() {
                   ))
                 )}
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 

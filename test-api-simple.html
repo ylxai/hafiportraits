@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 API Connection Test</h1>
+    <p>Current URL: <span id="currentUrl"></span></p>
+    
+    <button onclick="testBasicConnection()">Test Basic Connection</button>
+    <button onclick="testAPIRoutes()">Test API Routes</button>
+    <button onclick="testLogin()">Test Login</button>
+    
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('currentUrl').textContent = window.location.origin;
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        async function testBasicConnection() {
+            log('🔍 Testing basic connection...', 'info');
+            
+            try {
+                const response = await fetch('/');
+                log(`✅ Homepage: ${response.status} ${response.statusText}`, 'success');
+            } catch (error) {
+                log(`❌ Homepage: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAPIRoutes() {
+            log('🔍 Testing API routes...', 'info');
+            
+            const routes = ['/api/test/db', '/api/auth/me', '/api/events'];
+            
+            for (const route of routes) {
+                try {
+                    const response = await fetch(route);
+                    const status = response.ok ? 'success' : 'error';
+                    log(`${response.ok ? '✅' : '❌'} ${route}: ${response.status} ${response.statusText}`, status);
+                    
+                    if (response.ok) {
+                        const data = await response.text();
+                        log(`📄 Response: ${data.substring(0, 100)}...`, 'info');
+                    }
+                } catch (error) {
+                    log(`❌ ${route}: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function testLogin() {
+            log('🔍 Testing login endpoint...', 'info');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const status = response.ok ? 'success' : 'error';
+                log(`${response.ok ? '✅' : '❌'} Login: ${response.status} ${response.statusText}`, status);
+                
+                const data = await response.text();
+                log(`📄 Login Response: ${data}`, 'info');
+                
+            } catch (error) {
+                log(`❌ Login: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-test on load
+        window.onload = function() {
+            log('🚀 Starting automatic tests...', 'info');
+            setTimeout(testBasicConnection, 500);
+            setTimeout(testAPIRoutes, 1500);
+        };
+    </script>
+</body>
+</html>

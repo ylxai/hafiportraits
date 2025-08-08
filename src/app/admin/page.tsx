@@ -56,6 +56,7 @@ export default function AdminDashboardGrouped() {
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [isEventFormOpen, setIsEventFormOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [createdEvent, setCreatedEvent] = useState<Event | null>(null);
   
   // Photo management states
   const [selectedPhotoTab, setSelectedPhotoTab] = useState("homepage");
@@ -123,10 +124,10 @@ export default function AdminDashboardGrouped() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newEvent) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/events'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      setIsEventFormOpen(false);
+      setCreatedEvent(newEvent); // Store created event for success screen
       setEditingEvent(null);
       toast({
         title: "Event Berhasil Dibuat!",
@@ -540,12 +541,20 @@ export default function AdminDashboardGrouped() {
 
   const handleStartEdit = (event: Event) => {
     setEditingEvent(event);
+    setCreatedEvent(null); // Reset created event when editing
     setIsEventFormOpen(true);
   };
   
   const handleCancelForm = () => {
     setEditingEvent(null);
+    setCreatedEvent(null); // Reset created event when canceling
     setIsEventFormOpen(false);
+  };
+
+  const handleCreateNewEvent = () => {
+    setEditingEvent(null);
+    setCreatedEvent(null); // Reset created event when creating new
+    setIsEventFormOpen(true);
   };
   
   // Conditional returns after all hooks are called
@@ -699,7 +708,7 @@ export default function AdminDashboardGrouped() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <Button 
-                            onClick={() => setIsEventFormOpen(true)}
+                            onClick={handleCreateNewEvent}
                             className="w-full bg-wedding-gold hover:bg-wedding-gold/90 text-black"
                           >
                             <Plus className="w-4 h-4 mr-2" />
@@ -801,7 +810,7 @@ export default function AdminDashboardGrouped() {
                         {/* Quick Actions */}
                         <div className="flex flex-col sm:flex-row gap-3">
                           <Button 
-                            onClick={() => setIsEventFormOpen(true)}
+                            onClick={handleCreateNewEvent}
                             className="bg-wedding-gold hover:bg-wedding-gold/90 text-black"
                           >
                             <Plus className="w-4 h-4 mr-2" />
@@ -1647,6 +1656,7 @@ export default function AdminDashboardGrouped() {
                   onSave={handleSaveEvent}
                   onCancel={handleCancelForm}
                   isSaving={createEventMutation.isPending || updateEventMutation.isPending}
+                  createdEvent={createdEvent}
                 />
               </div>
             </div>

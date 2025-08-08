@@ -47,8 +47,8 @@ export function getAppBaseUrl(): string {
     return 'https://hafiportrait.photography'; // Current production domain
   }
 
-  // Development fallback
-  return 'http://localhost:3000';
+  // Development fallback - use environment variable or localhost
+  return process.env.DSLR_API_BASE_URL || 'http://localhost:3000';
 }
 
 /**

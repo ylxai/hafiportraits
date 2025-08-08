@@ -36,8 +36,17 @@ function LoginForm() {
     setError('');
 
     try {
-      // Force localhost URL for development
-      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '';
+      // Smart URL detection for different environments
+      const baseUrl = (() => {
+        if (typeof window !== 'undefined') {
+          return window.location.origin;
+        }
+        // Server-side fallback
+        if (process.env.NODE_ENV === 'production') {
+          return process.env.NEXT_PUBLIC_APP_URL || 'https://hafiportrait.photography';
+        }
+        return process.env.DSLR_API_BASE_URL || 'http://localhost:3000';
+      })();
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         credentials: 'include',

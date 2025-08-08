@@ -38,8 +38,15 @@ export async function middleware(request: NextRequest) {
     // For Edge Runtime compatibility, we'll validate session via API call
     try {
       // Make internal API call to validate session (Edge Runtime compatible)
-      const validateUrl = new URL('/api/auth/me', request.url);
-      const validateResponse = await fetch(validateUrl, {
+      // Simple environment-based URL handling
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? request.url  // Production: use HTTPS
+        : request.url.replace('https://', 'http://');  // Development: force HTTP
+      const validateUrl = new URL('/api/auth/me', baseUrl);
+      
+      console.log('Middleware validation URL:', validateUrl.toString());
+      
+      const validateResponse = await fetch(validateUrl.toString(), {
         headers: {
           'Cookie': `admin_session=${sessionId}`,
         },
@@ -89,8 +96,13 @@ export async function middleware(request: NextRequest) {
   if (isAuthRoute && sessionId) {
     try {
       // Make internal API call to validate session (Edge Runtime compatible)
-      const validateUrl = new URL('/api/auth/me', request.url);
-      const validateResponse = await fetch(validateUrl, {
+      // Simple environment-based URL handling
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? request.url  // Production: use HTTPS
+        : request.url.replace('https://', 'http://');  // Development: force HTTP
+      const validateUrl = new URL('/api/auth/me', baseUrl);
+      
+      const validateResponse = await fetch(validateUrl.toString(), {
         headers: {
           'Cookie': `admin_session=${sessionId}`,
         },

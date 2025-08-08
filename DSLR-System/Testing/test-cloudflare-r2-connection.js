@@ -53,7 +53,7 @@ async function testCloudflareR2Connection() {
   // Test connection
   console.log('\n3. Testing R2 connection...');
   try {
-    const CloudflareR2Storage = require('./src/lib/cloudflare-r2-storage');
+    const CloudflareR2Storage = require('../../src/lib/cloudflare-r2-storage');
     const r2 = new CloudflareR2Storage();
     
     const result = await r2.testConnection();
@@ -97,7 +97,7 @@ async function testUpload() {
     const testFileName = `test-${Date.now()}.txt`;
     const testBuffer = Buffer.from(testContent, 'utf8');
     
-    const CloudflareR2Storage = require('./src/lib/cloudflare-r2-storage');
+    const CloudflareR2Storage = require('../../src/lib/cloudflare-r2-storage');
     const r2 = new CloudflareR2Storage();
     
     const uploadResult = await r2.uploadPhoto(testBuffer, testFileName, {

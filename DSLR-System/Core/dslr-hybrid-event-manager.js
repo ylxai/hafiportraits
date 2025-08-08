@@ -189,7 +189,9 @@ class DSLRHybridEventManager {
   }
 
   async listEvents() {
-    return await this.loadEvents();
+    const events = await this.loadEvents();
+    // Convert object to array for CLI compatibility
+    return Object.values(events);
   }
 
   async getEventConfig(eventId) {

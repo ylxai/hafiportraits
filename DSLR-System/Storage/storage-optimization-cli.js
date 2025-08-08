@@ -9,7 +9,7 @@
 require('dotenv').config({ path: '.env.local' });
 require('dotenv').config(); // Fallback to .env
 
-const SmartStorageManager = require('./lib/smart-storage-manager');
+const SmartStorageManager = require('../lib/smart-storage-manager');
 const fs = require('fs').promises;
 const path = require('path');
 

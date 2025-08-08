@@ -12,14 +12,8 @@ export default function Header() {
     <header className="bg-dynamic-secondary shadow-dynamic sticky top-0 z-50 border-b border-dynamic">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-<<<<<<< HEAD
-          {/* Logo */}
-          <Link href="/" className="text-xl sm:text-2xl font-bold text-dynamic-accent flex items-center gap-2 group">
-            <Camera className="w-6 h-6 sm:w-7 sm:h-7 group-hover:rotate-12 transition-transform duration-300" />
-            <span className="hidden xs:inline bg-gradient-to-r from-dynamic-accent to-dynamic-accent bg-clip-text">HafiPortrait</span>
-=======
           {/* Signature Style Logo */}
-          <Link href="/" className="flex items-center gap-2 group cursor-pointer">
+          <Link href="/" className="flex items-center gap-2 group cursor-pointer relative">
             {/* Simple Camera Icon */}
             <Camera className="w-6 h-6 sm:w-7 sm:h-7 text-dynamic-accent group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
             
@@ -37,7 +31,6 @@ export default function Header() {
             
             {/* Subtle Underline */}
             <div className="absolute bottom-0 left-8 sm:left-9 w-0 h-0.5 bg-dynamic-accent group-hover:w-24 sm:group-hover:w-28 lg:group-hover:w-32 transition-all duration-500 ease-out"></div>
->>>>>>> adfe70e72f9aec9e5c135f9573a7b45ac49e748d
           </Link>
           
           {/* Desktop Navigation */}

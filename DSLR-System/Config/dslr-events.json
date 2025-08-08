@@ -70,6 +70,7 @@
     "created_via": "hybrid-cli",
     "access_code": "RRUMEP",
     "share_url": "https://hafiportrait.photography/event/test-wedding-sample-2025-01-20",
-    "qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://hafiportrait.photography/event/test-wedding-sample-2025-01-20"
+    "qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://hafiportrait.photography/event/test-wedding-sample-2025-01-20",
+    "syncStatus": "pending"
   }
 }

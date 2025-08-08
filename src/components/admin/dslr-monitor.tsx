@@ -277,12 +277,12 @@ export default function DSLRMonitor() {
   };
 
   return (
-    <div className="mobile-spacing">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mobile-card">
-        <div className="mobile-card-header">
-          <div>
-            <h2 className="mobile-card-title flex items-center gap-2">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
               <Camera className="h-5 w-5" />
               DSLR Monitor
             </h2>

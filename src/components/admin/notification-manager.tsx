@@ -26,7 +26,8 @@ import {
   Plus,
   Filter,
   Download,
-  Upload as UploadIcon
+  Upload as UploadIcon,
+  RefreshCw
 } from 'lucide-react';
 
 interface NotificationSettings {
@@ -77,6 +78,8 @@ interface Subscriber {
 
 export default function NotificationManager() {
   const [activeTab, setActiveTab] = useState<'settings' | 'templates' | 'history' | 'subscribers'>('settings');
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
   const [settings, setSettings] = useState<NotificationSettings>({
     uploadSuccess: true,
@@ -93,6 +96,25 @@ export default function NotificationManager() {
       end: '08:00'
     }
   });
+
+  // Auto-save settings when changed
+  useEffect(() => {
+    const saveSettings = async () => {
+      setIsLoading(true);
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error('Failed to save settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(saveSettings, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [settings]);
 
   const [templates, setTemplates] = useState<NotificationTemplate[]>([
     {
@@ -219,119 +241,216 @@ export default function NotificationManager() {
   };
 
   return (
-    <div className="mobile-spacing">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mobile-card">
-        <div className="mobile-card-header">
-          <div>
-            <h2 className="mobile-card-title flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notification Manager
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Kelola notifikasi real-time untuk upload dan event
-            </p>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                <span className="truncate">Notification Manager</span>
+                {isLoading && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
+                )}
+              </CardTitle>
+              <CardDescription className="mt-1">
+                <span className="block sm:inline">Kelola notifikasi real-time untuk upload dan event</span>
+                {lastSaved && (
+                  <span className="block sm:inline sm:ml-2 text-green-600">
+                    • Tersimpan {lastSaved.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+            
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button 
+                onClick={handleSendTestNotification}
+                variant="outline"
+                size="sm"
+                className="flex-1 sm:flex-initial"
+              >
+                <Send className="h-4 w-4 mr-1" />
+                <span className="hidden xs:inline">Test</span>
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()}
+                size="sm"
+                title="Refresh data"
+                className="flex-shrink-0"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          
-          <button 
-            onClick={handleSendTestNotification}
-            className="mobile-btn mobile-btn-primary touch-feedback"
-          >
-            <Send className="h-4 w-4 mr-1" />
-            Test
-          </button>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button 
+              onClick={() => {
+                setSettings(prev => ({ ...prev, uploadSuccess: !prev.uploadSuccess }));
+              }}
+              className={`p-3 rounded-lg border text-center transition-all ${
+                settings.uploadSuccess 
+                  ? 'bg-green-50 border-green-200 text-green-700' 
+                  : 'bg-gray-50 border-gray-200 text-gray-500'
+              }`}
+            >
+              <UploadIcon className="h-5 w-5 mx-auto mb-1" />
+              <span className="text-xs font-medium">Upload Success</span>
+            </button>
+            
+            <button 
+              onClick={() => {
+                setSettings(prev => ({ ...prev, cameraDisconnected: !prev.cameraDisconnected }));
+              }}
+              className={`p-3 rounded-lg border text-center transition-all ${
+                settings.cameraDisconnected 
+                  ? 'bg-red-50 border-red-200 text-red-700' 
+                  : 'bg-gray-50 border-gray-200 text-gray-500'
+              }`}
+            >
+              <XCircle className="h-5 w-5 mx-auto mb-1" />
+              <span className="text-xs font-medium">Camera Alert</span>
+            </button>
+            
+            <button 
+              onClick={() => {
+                setSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
+              }}
+              className={`p-3 rounded-lg border text-center transition-all ${
+                settings.soundEnabled 
+                  ? 'bg-blue-50 border-blue-200 text-blue-700' 
+                  : 'bg-gray-50 border-gray-200 text-gray-500'
+              }`}
+            >
+              {settings.soundEnabled ? <BellRing className="h-5 w-5 mx-auto mb-1" /> : <BellOff className="h-5 w-5 mx-auto mb-1" />}
+              <span className="text-xs font-medium">Sound</span>
+            </button>
+            
+            <button 
+              onClick={handleSendTestNotification}
+              className="p-3 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-center transition-all"
+            >
+              <Send className="h-5 w-5 mx-auto mb-1" />
+              <span className="text-xs font-medium">Send Test</span>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Overview */}
-      <div className="stats-grid">
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <span className="text-sm font-medium">Total Sent</span>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
             <Send className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mobile-card-content">
+          </CardHeader>
+          <CardContent>
             <div className="text-2xl font-bold">{stats.totalSent.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">All time</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <span className="text-sm font-medium">Delivery Rate</span>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Delivery Rate</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mobile-card-content">
+          </CardHeader>
+          <CardContent>
             <div className="text-2xl font-bold">{stats.deliveryRate}%</div>
             <p className="text-xs text-muted-foreground">Last 30 days</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <span className="text-sm font-medium">Open Rate</span>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Open Rate</CardTitle>
             <Eye className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mobile-card-content">
+          </CardHeader>
+          <CardContent>
             <div className="text-2xl font-bold">{stats.openRate}%</div>
             <p className="text-xs text-muted-foreground">Last 30 days</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="mobile-card">
-          <div className="mobile-card-header">
-            <span className="text-sm font-medium">Subscribers</span>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Subscribers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mobile-card-content">
+          </CardHeader>
+          <CardContent>
             <div className="text-2xl font-bold">{stats.activeSubscribers}</div>
             <p className="text-xs text-muted-foreground">Active users</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tab Navigation */}
-      <div className="mobile-tabs-container">
-        <div className="mobile-tabs-list">
+      <div className="border-b">
+        <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveTab('settings')}
-            className={`mobile-tab ${activeTab === 'settings' ? 'data-[state=active]:bg-background data-[state=active]:text-foreground' : ''}`}
+            className={`flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+              activeTab === 'settings' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <Settings className="tab-icon" />
-            <span className="tab-label">Settings</span>
+            <Settings className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden xs:inline sm:inline">Settings</span>
           </button>
           <button
             onClick={() => setActiveTab('templates')}
-            className={`mobile-tab ${activeTab === 'templates' ? 'data-[state=active]:bg-background data-[state=active]:text-foreground' : ''}`}
+            className={`flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+              activeTab === 'templates' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <Edit className="tab-icon" />
-            <span className="tab-label">Templates</span>
+            <Edit className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden xs:inline sm:inline">Templates</span>
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`mobile-tab ${activeTab === 'history' ? 'data-[state=active]:bg-background data-[state=active]:text-foreground' : ''}`}
+            className={`flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+              activeTab === 'history' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <History className="tab-icon" />
-            <span className="tab-label">History</span>
+            <History className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden xs:inline sm:inline">History</span>
           </button>
           <button
             onClick={() => setActiveTab('subscribers')}
-            className={`mobile-tab ${activeTab === 'subscribers' ? 'data-[state=active]:bg-background data-[state=active]:text-foreground' : ''}`}
+            className={`flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+              activeTab === 'subscribers' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <Users className="tab-icon" />
-            <span className="tab-label">Subscribers</span>
+            <Users className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden xs:inline sm:inline">Subscribers</span>
           </button>
-        </div>
+        </nav>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'settings' && (
-        <div className="mobile-spacing slide-up">
-          <div className="mobile-card">
-            <div className="mobile-card-header">
-              <h3 className="mobile-card-title">Notification Settings</h3>
-            </div>
-            <div className="mobile-card-content mobile-spacing">
+        <Card>
+          <CardHeader>
+            <CardTitle>Notification Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
               
               {/* Upload Notifications */}
               <div>
@@ -339,7 +458,7 @@ export default function NotificationManager() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="mobile-label">Upload Success</label>
+                      <Label className="text-sm font-medium">Upload Success</Label>
                       <p className="text-xs text-muted-foreground">Notifikasi saat foto berhasil diupload</p>
                     </div>
                     <Switch
@@ -352,7 +471,7 @@ export default function NotificationManager() {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="mobile-label">Upload Failed</label>
+                      <Label className="text-sm font-medium">Upload Failed</Label>
                       <p className="text-xs text-muted-foreground">Notifikasi saat upload gagal</p>
                     </div>
                     <Switch
@@ -490,111 +609,218 @@ export default function NotificationManager() {
                 </div>
               </div>
 
-              <button 
+              <Button 
                 onClick={handleSettingsUpdate}
-                className="mobile-btn mobile-btn-primary touch-feedback w-full"
+                className="w-full"
               >
                 Save Settings
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </CardContent>
+          </Card>
       )}
 
       {activeTab === 'templates' && (
-        <div className="mobile-spacing slide-up">
-          <div className="mobile-card">
-            <div className="mobile-card-header">
-              <h3 className="mobile-card-title">Notification Templates</h3>
-              <button className="mobile-btn mobile-btn-primary touch-feedback">
-                <Plus className="h-4 w-4 mr-1" />
-                Add
-              </button>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Notification Templates</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={() => {
+                    // Toggle all templates
+                    const allActive = templates.every(t => t.isActive);
+                    setTemplates(prev => prev.map(t => ({ ...t, isActive: !allActive })));
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  {templates.every(t => t.isActive) ? <BellOff className="h-4 w-4 mr-1" /> : <BellRing className="h-4 w-4 mr-1" />}
+                  {templates.every(t => t.isActive) ? 'Disable All' : 'Enable All'}
+                </Button>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
             </div>
-            <div className="mobile-card-content">
-              <div className="mobile-spacing">
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
                 {templates.map((template) => (
-                  <div key={template.id} className="border rounded-lg p-4 space-y-3">
+                  <div key={template.id} className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
+                        <Switch
+                          checked={template.isActive}
+                          onCheckedChange={(checked) => {
+                            setTemplates(prev => prev.map(t => 
+                              t.id === template.id ? { ...t, isActive: checked } : t
+                            ));
+                          }}
+                        />
                         <Badge variant={template.isActive ? 'default' : 'secondary'}>
-                          {template.isActive ? 'Active' : 'Inactive'}
+                          {template.type.replace('_', ' ').toUpperCase()}
                         </Badge>
-                        <span className="text-sm font-medium">{template.type.replace('_', ' ')}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button className="p-2 hover:bg-muted rounded touch-feedback">
+                        <Button 
+                          onClick={() => {
+                            // Duplicate template
+                            const newTemplate = { 
+                              ...template, 
+                              id: Date.now().toString(), 
+                              title: `${template.title} (Copy)` 
+                            };
+                            setTemplates(prev => [...prev, newTemplate]);
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          title="Duplicate"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm">
                           <Edit className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 hover:bg-muted rounded touch-feedback">
+                        </Button>
+                        <Button variant="ghost" size="sm">
                           <Trash2 className="h-4 w-4 text-red-500" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                     
                     <div>
                       <p className="font-medium">{template.title}</p>
-                      <p className="text-sm text-muted-foreground">{template.message}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{template.message}</p>
                     </div>
+                    
+                    {/* Preview button */}
+                    <button 
+                      onClick={() => {
+                        // Show preview
+                        alert(`Preview:\n\nTitle: ${template.title}\nMessage: ${template.message}`);
+                      }}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Preview Template
+                    </button>
                   </div>
                 ))}
-              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {activeTab === 'history' && (
-        <div className="mobile-spacing slide-up">
-          <div className="mobile-card">
-            <div className="mobile-card-header">
-              <h3 className="mobile-card-title">Notification History</h3>
-              <div className="flex items-center gap-2">
-                <button className="mobile-btn mobile-btn-secondary touch-feedback">
-                  <Filter className="h-4 w-4 mr-1" />
-                  Filter
-                </button>
-                <button className="mobile-btn mobile-btn-secondary touch-feedback">
-                  <Download className="h-4 w-4 mr-1" />
-                  Export
-                </button>
+        <div className="space-y-4">
+          {/* Search and Filter */}
+          <Card>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Cari notifikasi..."
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <select className="px-3 py-2 border rounded-md text-sm">
+                    <option value="">Semua Status</option>
+                    <option value="sent">Terkirim</option>
+                    <option value="failed">Gagal</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                  <select className="px-3 py-2 border rounded-md text-sm">
+                    <option value="">7 Hari Terakhir</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="week">Minggu Ini</option>
+                    <option value="month">Bulan Ini</option>
+                  </select>
+                </div>
               </div>
-            </div>
-            <div className="mobile-card-content">
-              <div className="mobile-spacing">
-                {history.map((item) => (
-                  <div key={item.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(item.status)}`}>
-                            {item.status}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDateTime(item.sentAt)}
-                          </span>
-                        </div>
-                        <p className="font-medium">{item.title}</p>
-                        <p className="text-sm text-muted-foreground truncate">{item.message}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <p className="text-sm font-medium">{item.recipients}</p>
-                        <p className="text-xs text-muted-foreground">Recipients</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{item.deliveryRate}%</p>
-                        <p className="text-xs text-muted-foreground">Delivered</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{item.openRate}%</p>
-                        <p className="text-xs text-muted-foreground">Opened</p>
-                      </div>
-                    </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Notification History</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      // Clear all history
+                      if (confirm('Hapus semua riwayat notifikasi?')) {
+                        setHistory([]);
+                      }
+                    }}
+                    variant="outline" 
+                    size="sm"
+                    className="text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {history.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <History className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>Belum ada riwayat notifikasi</p>
                   </div>
-                ))}
+                ) : (
+                  history.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(item.status)}`}>
+                              {item.status.toUpperCase()}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDateTime(item.sentAt)}
+                            </span>
+                          </div>
+                          <p className="font-medium">{item.title}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{item.message}</p>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            // Show full details
+                            alert(`Detail Notifikasi:\n\nTitle: ${item.title}\nMessage: ${item.message}\nRecipients: ${item.recipients}\nSent: ${formatDateTime(item.sentAt)}`);
+                          }}
+                          className="p-2 hover:bg-muted rounded touch-feedback"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                          <p className="text-sm font-medium">{item.recipients}</p>
+                          <p className="text-xs text-muted-foreground">Recipients</p>
+                        </div>
+                        <div>
+                          <p className={`text-sm font-medium ${item.deliveryRate >= 90 ? 'text-green-600' : item.deliveryRate >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {item.deliveryRate}%
+                          </p>
+                          <p className="text-xs text-muted-foreground">Delivered</p>
+                        </div>
+                        <div>
+                          <p className={`text-sm font-medium ${item.openRate >= 50 ? 'text-green-600' : item.openRate >= 25 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {item.openRate}%
+                          </p>
+                          <p className="text-xs text-muted-foreground">Opened</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

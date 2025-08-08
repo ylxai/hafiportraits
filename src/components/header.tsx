@@ -16,7 +16,6 @@ export default function Header() {
           <Link href="/" className="text-xl sm:text-2xl font-bold text-dynamic-accent flex items-center gap-2 group">
             <Camera className="w-6 h-6 sm:w-7 sm:h-7 group-hover:rotate-12 transition-transform duration-300" />
             <span className="hidden xs:inline bg-gradient-to-r from-dynamic-accent to-dynamic-accent bg-clip-text">HafiPortrait</span>
-            <span className="xs:hidden bg-gradient-to-r from-dynamic-accent to-dynamic-accent bg-clip-text">Hafi</span>
           </Link>
           
           {/* Desktop Navigation */}

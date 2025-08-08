@@ -205,11 +205,11 @@ export default function ContactSection() {
                       <span className="text-green-600 font-semibold">Free Travel</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-800">Jawa Barat</span> {/* Menyesuaikan warna teks */}
+                      <span className="text-gray-800">Kalimantan Selatan</span> {/* Menyesuaikan warna teks */}
                       <span className="text-blue-600 font-semibold">Available</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-800">Luar Kota</span> {/* Menyesuaikan warna teks */}
+                      <span className="text-gray-800">Luar Kalimantan</span> {/* Menyesuaikan warna teks */}
                       <span className="text-wedding-gold font-semibold">By Request</span> {/* Menggunakan warna tema */}
                     </div>
                   </div>
